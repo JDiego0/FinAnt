@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="Inicio" style="display: none;"> 
+        <div id="LogoContainer"><img class="logo" src="IMAGES/AntTrans.png" alt=""></div><br><br>
+        <button id="btnIniciarSesion">Iniciar sesión</button><br><br> <!-- lleva a WindowIniciarSesion -->
+        <button id="btnRegUsuario">Registrar usuario</button>  <!-- lleva a registroUsuario -->
+    </div>
+
+    <div id="WindowIniciarSesion" style="display: none;"> 
+        <h2>Iniciar Sesión</h2>
+        <label for="">Usuario</label>
+        <input type="text" id="txtUsuario" placeholder="Ingrese su documento"><br><br> 
+        <label for="">Contraseña</label>
+        <input type="password" id="txtContrasena" placeholder="Ingrese su contraseña"><br><br>
+        <button id="btnIniciar">Iniciar sesión</button><br><br> 
+        <button id="btnCancelar">Cancelar</button><br><br>
+        <button id="btnOlvidoPass">¿Olvidó contraseña?</button>
+    </div>
+
+    <div  id="OpenSesion" style="display: block;">
+        
+        <div id="LogoContainer"><img class="logo" src="IMAGES/AntTrans.png" alt=""></div><br>
+        
+        <div id="CuentasYMenuUsuario">
+
+            <div id="MenuUsuario">
+                <button id="btnRegistrarMovimiento">REGISTRAR MOVIMIENTO</button> 
+                <button id="btnAjustarSaldo">AJUSTAR SALDO</button> 
+                <button id="btnNotas">NOTAS</button> 
+                <button id="btnCerrarSesion">CERRAR SESIÓN</button> 
+            </div> 
+
+            <div id="Cuentas">
+                <div class="cuentas-header">
+                    <div>EFECTIVO</div>
+                    <div>CTA AHORRO</div>
+                    <div>INVERSIONES</div>
+                    <div>TOTAL</div>
+                </div>
+
+                <div class="cuentas-valores"> 
+                    <div id="Efectivo" >1</div>
+                    <div id="Ahorros" >2</div>
+                    <div id="Inversiones" >3</div>
+                    <div id="totalCtas" >4</div> 
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="Movimientos"> 
+            <div class="movimientos-header">
+                <div>TIPO</div>
+                <div>HECHO</div>
+                <div>FECHA</div>
+                <div>DESCRIPCION</div>
+                <div>VALOR</div>
+                <div>CUENTA</div>
+                <div>ELIMINAR</div>
+            </div>
+
+            <!-- /*EJEMPLOS DE MOVIMIENTOS*/ 
+            <div class="movimientoRow">
+                <div class="ingreso">INGRESO</div> 
+                <div><input type="checkbox"></div> 
+                <div>2025-06-25</div> 
+                <div>Venta de producto digital</div> 
+                <div>150</div> 
+                <div>Ahorros</div> 
+                <div><button class="delete-btn">✖</button></div>  
+            </div>
+
+            <div class="movimientoRow">
+                <div class="egreso">EGRESO</div> 
+                <div><input type="checkbox"></div> 
+                <div>2025-06-25</div>
+                <div>Seguridad social</div>
+                <div>35000</div> 
+                <div>Ahorros</div> 
+                <div><button class="delete-btn">✖</button></div>
+            </div>
+            -->
+
+        </div>
+    </div>
+
+    <div id="registroMovimiento" style="display: none;"> 
+        <h2>Registrar Movimiento</h2>
+        <label for="tipo">Tipo</label>
+        <select id="tipo"> 
+            <option value="ingreso">Ingreso</option>
+            <option value="egreso">Egreso</option>
+        </select><br><br>
+        <label for="txtFecha">Fecha</label> 
+        <input type="date" id="txtFecha"><br><br> 
+        <label for="txtDescripcion">Descripción</label>
+        <input type="text" id="txtDescripcion" placeholder="Descripción del movimiento"><br><br>
+        <label for="txtValor">Valor</label> 
+        <input type="number" id="txtValor" placeholder="Valor del movimiento"><br><br> 
+        <label for="selectCuenta">Cuenta</label>
+        <select id="selectCuenta"> 
+            <option value="Efectivo">Efectivo</option>
+            <option value="Ahorros">Cta Ahorros</option>
+            <option value="Inversiones">Inversiones</option>
+        </select><br><br>
+        <button id="botonRegistrarMovimiento">Registrar Movimiento</button><br><br>
+        <button id="btnCancelarMovimiento">Cancelar</button><br><br>
+        <span id="msgRegistrarMovimiento"></span> 
+    </div>
+
+    <div id="ajustarSaldo" style="display: none;">
+        <h2>Ajustar Saldo</h2>
+        <label for="selectCuentaAjuste">Cuenta</label>
+        <select id="selectCuentaAjuste"> 
+            <option value="Efectivo">Efectivo</option>
+            <option value="Ahorros">Ahorros</option>
+            <option value="Inversiones">Inversiones</option>
+        </select><br><br>
+        <label for="txtNuevoSaldo">Nuevo Saldo</label> 
+        <input type="number" id="txtNuevoSaldo" placeholder="Ingrese el nuevo saldo"><br><br>
+        <button id="botonAjustarSaldo">Ajustar Saldo</button><br><br> 
+        <button id="btnCancelarAjuste">Cancelar</button><br><br> <!-- regresa a OpenSesion -->
+        <span id="msgActualizarSaldo"></span>
+    </div>
+
+    <div id="notas" style="display: none;"> 
+        <h2>Notas</h2>
+        <label for="tituloNota">Titulo</label> 
+        <input type="text" id="tituloNota" placeholder="Ingrese el título de la nota"><br><br>
+        <textarea id="txtNotas" placeholder="Escribe tus notas aquí..."></textarea><br><br>
+        <button id="btnGuardarNotas">Guardar Notas</button><br>
+        <button id="btnCancelarNotas">Cancelar</button> 
+    </div>
+
+    <div id="registroUsuario" style="display: none;"> 
+        <h2>Registrar Usuario</h2>
+        <label for="txtNombre">Nombre</label>
+        <input type="text" id="txtNombre" placeholder="Ingrese su nombre"><br><br>
+        <label for="txtDocumento">Documento</label>
+        <input type="text" id="txtDocumento" placeholder="Ingrese su documento"><br><br>
+        <label for="txtTelefono">Telefono</label>
+        <input type="text" id="txtTelefono" placeholder="Ingrese su teléfono"><br><br>
+        <label for="txtCorreo">Correo Electrónico</label>
+        <input type="email" id="txtCorreo" placeholder="Ingrese su correo electrónico"><br><br>
+        <label for="txtPreguntaSecreta">Escribe pregunta secreta</label>
+        <input type="text" id="txtPreguntaSecreta" placeholder="Escribe una pregunta secreta"><br><br>
+        <label for="txtRespuestaSecreta">Escribe respuesta secreta</label>
+        <input type="text" id="txtRespuestaSecreta" placeholder="Escribe una respuesta secreta"><br><br>
+        <label for="txtContrasenaRegistro">Contraseña</label>
+        <input type="password" id="txtContrasenaRegistro" placeholder="Ingrese una contraseña"><br><br>
+        <label for="txtConfirmarContrasena">Confirmar Contraseña</label>
+        <input type="password" id="txtConfirmarContrasena" placeholder="Confirma tu contraseña"><br><br>
+        <button id="btnRegistrar">Registrar</button><br><br> <!-- registra el usuario con los datos ingresados, si ya existe un usuario con el mismo documento se muestra un mensaje de error, si las contraseñas no coinciden se muestra un mensaje de error, si todos los campos estan diligenciados y las validaciones son correctas crea el usuario muestra mensaje de exito y devuelve al inicio de la aplicacion -->
+        <button id="btnCancelarRegistro">Cancelar</button> <!-- regresa a Inicio -->
+    </div>
+
+    <div id="olvidoPassword" style="display: none;"> 
+        <h2>Olvido contraseña</h2>
+        <span id="PreguntaScretaGuardada">pregunta secreta</span><br><br> <!-- muestra la pregunta secreta guardada para el usuario, si no hay pregunta secreta guardada se muestra un mensaje de error -->
+        <label for="respuestaSecretaGuardada">Respuesta secreta</label>
+        <input type="text" id="respuestaSecretaGuardada" placeholder="Escribe la respuesta secreta guardada"><br><br>
+        <label for="documento">Documento</label>
+        <input type="text" id="documento" placeholder="Ingrese su documento"><br><br>
+        <button id="btnComprobar">Comprobar datos</button><br><br> <!-- valida que el documento y la respuesta secreta coincidan con los datos guardados, si son correctos se muestra el panel para cambiar la contraseña, si no son correctos se muestra un mensaje de error -->
+        <div id="panelNuevaContra" style="display: none;">
+            <label for="nuevaContrasena">Ingrese nueva contraseña</label>
+            <input type="password" id="nuevaContrasena" placeholder="Ingrese su nueva contraseña"><br><br>
+            <label for="confirmaNuevaContrasena">Confirma nueva contraseña</label>
+            <input type="password" id="confirmaNuevaContrasena" placeholder="Confirma tu nueva contraseña"><br><br>
+            <button id="btnCambiarContrasena">Cambiar contraseña</button><br><br> <!-- cambia la contraseña del usuario con los datos ingresados, si las contraseñas no coinciden se muestra un mensaje de error, si todos los campos estan diligenciados y las validaciones son correctas cambia la contraseña muestra mensaje de exito y devuelve al inicio de la aplicacion -->
+        </div>
+        <button id="btnCancelarRecuperacion">Cancelar</button><br><br>
+        <span id="msgErrorRecuperacion"></span>
+    </div>
+
+    <script src="JS/main.js" type="module"></script>
+
+</body>
+</html>
