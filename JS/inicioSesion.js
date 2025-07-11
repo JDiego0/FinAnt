@@ -8,7 +8,6 @@ export function inicioSesion() {
     const OpenSesion = document.getElementById("OpenSesion");
     const btnOlvidoPass = document.getElementById("btnOlvidoPass");
     const olvidoPassword = document.getElementById("olvidoPassword");
-    // Crear elemento para mensajes
     const mensajeElement = document.createElement('div');
     mensajeElement.id = 'mensajeLogin';
     mensajeElement.style.cssText = `
@@ -19,44 +18,36 @@ export function inicioSesion() {
         font-family: Arial, sans-serif;
     `;
     WindowIniciarSesion.insertBefore(mensajeElement, WindowIniciarSesion.firstChild);
-    // Función para mostrar mensajes
     const mostrarMensaje = (texto, esError = false) => {
         mensajeElement.textContent = texto;
         mensajeElement.style.display = 'block';
         mensajeElement.style.backgroundColor = esError ? '#FFEBEE' : '#E8F5E9';
         mensajeElement.style.color = esError ? '#C62828' : '#2E7D32';
         mensajeElement.style.borderLeft = `4px solid ${esError ? '#C62828' : '#2E7D32'}`;
-        // Ocultar después de 5 segundos
         setTimeout(() => {
             mensajeElement.style.display = 'none';
         }, 5000);
     };
-    // Evento para el botón de iniciar sesión
     btnIniciar.addEventListener("click", () => {
         const txtUsuario = document.getElementById("txtUsuario").value;
         const txtContrasena = document.getElementById("txtContrasena").value;
-        // Validar campos vacíos
         if (!txtUsuario || !txtContrasena) {
             mostrarMensaje("Por favor ingrese documento y contraseña", true);
             return;
         }
-        // Obtener usuarios del localStorage
         const usuariosGuardados = localStorage.getItem('myApp_users_v1');
         if (!usuariosGuardados) {
             mostrarMensaje("No hay usuarios registrados", true);
             return;
         }
         const usuarios = JSON.parse(usuariosGuardados);
-        // Buscar usuario
         const usuarioValido = usuarios.find((user) => user.documento === txtUsuario && user.contrasena === txtContrasena);
         if (usuarioValido) {
             mostrarMensaje("Inicio de sesión exitoso. Redirigiendo...");
-            // Redirigir después de 1 segundo
             setTimeout(() => {
                 WindowIniciarSesion.style.display = "none";
                 OpenSesion.style.display = "block";
                 aplicarFormatoPesos(".valorMto");
-                // Guardar sesión activa
                 localStorage.setItem('usuarioActivo', JSON.stringify(usuarioValido));
             }, 1000);
         }
@@ -64,7 +55,6 @@ export function inicioSesion() {
             mostrarMensaje("Documento o contraseña incorrectos", true);
         }
     });
-    // Evento para el botón cancelar
     btnCancelar.addEventListener("click", () => {
         WindowIniciarSesion.style.display = "none";
         Inicio.style.display = "block";

@@ -31,7 +31,7 @@ export function registrarMovimiento() {
             descripcion: descripcionMov,
             valor: parseFloat(valorMov),
             cuenta: cuentaMov,
-            aplicado: false // por defecto no aplicado
+            aplicado: false
         };
         guardarMovimiento(movimiento);
         mostrarMovimiento(movimiento);
@@ -106,7 +106,6 @@ export function registrarMovimiento() {
             if (confirmacion) {
                 fila.remove();
                 eliminarMovimiento(movimiento.id);
-                // No revertimos efecto del checkbox ni tocamos los saldos
             }
         });
         Movimientos.appendChild(fila);

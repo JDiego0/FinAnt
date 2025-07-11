@@ -18,7 +18,7 @@ class MainApp {
     }
 
     private inicializarModulos(): void {
-        // Módulos que no requieren usuario activo
+        
         new RegistroUsuario();
         new RecuperarPassword();
         inicioSesion();
@@ -28,7 +28,7 @@ class MainApp {
         registrarMovimiento();
         actualizarCuentas(); 
 
-        // Módulos que requieren usuario activo
+        
         if (this.verificarUsuarioActivo()) {
             new NotasManager();
             
@@ -40,7 +40,7 @@ class MainApp {
     }
 }
 
-// Inicializar la aplicación
+
 document.addEventListener('DOMContentLoaded', () => {
     new MainApp();
 });

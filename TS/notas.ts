@@ -5,16 +5,16 @@ export class NotasManager {
     private usuarioId: string;
 
     constructor() {
-        // Obtener ID del usuario activo
+        
         const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo') || '{}');
         this.usuarioId = usuarioActivo.documento || '';
 
-        // Crear contenedor de notas
+        
         this.notasContainer = document.createElement('div');
         this.notasContainer.id = 'notas-container';
         this.notasContainer.style.marginTop = '20px';
         
-        // Crear elemento para mensajes
+        
         this.mensajeElement = document.createElement('div');
         this.mensajeElement.id = 'notas-mensaje';
         this.mensajeElement.style.cssText = `
@@ -24,7 +24,7 @@ export class NotasManager {
             display: none;
         `;
 
-        // Insertar elementos en el DOM
+        
         const notasDiv = document.getElementById('notas');
         notasDiv?.insertBefore(this.mensajeElement, notasDiv.children[2]);
         notasDiv?.appendChild(this.notasContainer);
@@ -79,10 +79,10 @@ export class NotasManager {
             contenidoElement.style.display = 'none'; // Asegurar que empiece oculto
 
             tituloElement.addEventListener('click', () => {
-                // Alternar visibilidad del contenido
+                
                 contenidoElement.style.display = contenidoElement.style.display === 'none' ? 'block' : 'none';
                 
-                // Opcional: Cambiar ícono/indicador visual
+                
                 const indicator = tituloElement.querySelector('.toggle-indicator');
                 if (indicator) {
                     indicator.textContent = contenidoElement.style.display === 'none' ? '▶' : '▼';

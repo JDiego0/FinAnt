@@ -52,7 +52,6 @@ export class RecuperarPassword {
             this.mostrarMensaje("Las contraseñas no coinciden", true);
             return;
         }
-        // Actualizar contraseña en localStorage
         this.actualizarContrasenaEnSistema(nuevaContrasena);
         this.mostrarMensaje("Contraseña cambiada exitosamente");
         setTimeout(() => {
@@ -61,18 +60,14 @@ export class RecuperarPassword {
         }, 1500);
     }
     actualizarContrasenaEnSistema(nuevaContrasena) {
-        // Obtener todos los usuarios
         const usuariosGuardados = localStorage.getItem('myApp_users_v1');
         if (!usuariosGuardados)
             return;
         const usuarios = JSON.parse(usuariosGuardados);
-        // Encontrar y actualizar el usuario
         const usuarioIndex = usuarios.findIndex((u) => u.documento === this.usuarioActivo.documento);
         if (usuarioIndex !== -1) {
             usuarios[usuarioIndex].contrasena = nuevaContrasena;
-            // Guardar cambios
             localStorage.setItem('myApp_users_v1', JSON.stringify(usuarios));
-            // Actualizar usuario activo
             this.usuarioActivo.contrasena = nuevaContrasena;
             localStorage.setItem('usuarioActivo', JSON.stringify(this.usuarioActivo));
         }

@@ -6,7 +6,6 @@ export class RegistroUsuario {
         this.btnCancelarRegistro = document.getElementById("btnCancelarRegistro");
         this.registroUsuario = document.getElementById("registroUsuario");
         this.inicio = document.getElementById("Inicio");
-        // Crear elemento para mensajes
         this.mensajeElement = document.createElement('div');
         this.mensajeElement.id = 'mensajeRegistro';
         this.mensajeElement.style.margin = '10px 0';
@@ -21,7 +20,6 @@ export class RegistroUsuario {
         this.mensajeElement.style.backgroundColor = esError ? '#ffebee' : '#e8f5e9';
         this.mensajeElement.style.color = esError ? '#c62828' : '#2e7d32';
         this.mensajeElement.style.display = 'block';
-        // Ocultar mensaje después de 5 segundos
         setTimeout(() => {
             this.mensajeElement.style.display = 'none';
         }, 5000);
@@ -48,7 +46,6 @@ export class RegistroUsuario {
         const respuestaSecreta = document.getElementById("txtRespuestaSecreta").value;
         const contrasena = document.getElementById("txtContrasenaRegistro").value;
         const confirmarContrasena = document.getElementById("txtConfirmarContrasena").value;
-        // Validaciones
         if (contrasena !== confirmarContrasena) {
             this.mostrarMensaje("Las contraseñas no coinciden", true);
             return;
@@ -57,12 +54,10 @@ export class RegistroUsuario {
             this.mostrarMensaje("Por favor complete todos los campos obligatorios", true);
             return;
         }
-        // Verificar si el usuario ya existe
         if (this.users.some(user => user.documento === documento)) {
             this.mostrarMensaje("Este documento ya está registrado", true);
             return;
         }
-        // Crear nuevo usuario
         const nuevoUser = {
             id: Date.now(),
             nombre,
@@ -73,12 +68,10 @@ export class RegistroUsuario {
             respuestaSecreta,
             contrasena
         };
-        // Agregar al arreglo
         this.users.push(nuevoUser);
         this.guardarUsersEnLocalStorage();
         this.limpiarFormulario();
         this.mostrarMensaje("Usuario registrado con éxito. Redirigiendo...");
-        // Ocultar formulario después de 2 segundos
         setTimeout(() => {
             this.registroUsuario.style.display = "none";
             this.inicio.style.display = "block";

@@ -14,7 +14,7 @@ export class RegistroUsuario {
         this.registroUsuario = document.getElementById("registroUsuario")!;
         this.inicio = document.getElementById("Inicio")!;
         
-        // Crear elemento para mensajes
+        
         this.mensajeElement = document.createElement('div');
         this.mensajeElement.id = 'mensajeRegistro';
         this.mensajeElement.style.margin = '10px 0';
@@ -32,7 +32,7 @@ export class RegistroUsuario {
         this.mensajeElement.style.color = esError ? '#c62828' : '#2e7d32';
         this.mensajeElement.style.display = 'block';
         
-        // Ocultar mensaje después de 5 segundos
+        
         setTimeout(() => {
             this.mensajeElement.style.display = 'none';
         }, 5000);
@@ -64,7 +64,7 @@ export class RegistroUsuario {
         const contrasena = (document.getElementById("txtContrasenaRegistro") as HTMLInputElement).value;
         const confirmarContrasena = (document.getElementById("txtConfirmarContrasena") as HTMLInputElement).value;
 
-        // Validaciones
+        
         if (contrasena !== confirmarContrasena) {
             this.mostrarMensaje("Las contraseñas no coinciden", true);
             return;
@@ -75,13 +75,13 @@ export class RegistroUsuario {
             return;
         }
 
-        // Verificar si el usuario ya existe
+        
         if (this.users.some(user => user.documento === documento)) {
             this.mostrarMensaje("Este documento ya está registrado", true);
             return;
         }
 
-        // Crear nuevo usuario
+        
         const nuevoUser = {
             id: Date.now(),
             nombre,
@@ -93,14 +93,14 @@ export class RegistroUsuario {
             contrasena
         };
 
-        // Agregar al arreglo
+        
         this.users.push(nuevoUser);
         this.guardarUsersEnLocalStorage();
         this.limpiarFormulario();
 
         this.mostrarMensaje("Usuario registrado con éxito. Redirigiendo...");
         
-        // Ocultar formulario después de 2 segundos
+        
         setTimeout(() => {
             this.registroUsuario.style.display = "none";
             this.inicio.style.display = "block";

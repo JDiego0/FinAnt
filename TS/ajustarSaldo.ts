@@ -12,10 +12,10 @@ export function ajustarSaldo(){
     const cuentas = ["Efectivo", "Ahorros", "Inversiones"];
 
     cuentas.forEach(id => {
-        const valorGuardado = localStorage.getItem(id); // Obtener valor guardado
-        const elemento = document.getElementById(id);   // Obtener el elemento correspondiente
+        const valorGuardado = localStorage.getItem(id); 
+        const elemento = document.getElementById(id);   
         if (valorGuardado !== null && elemento) {
-            elemento.textContent = valorGuardado;       // Mostrar el saldo guardado en el DOM
+            elemento.textContent = valorGuardado;       
         }
     });
 
