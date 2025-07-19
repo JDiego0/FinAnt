@@ -24,7 +24,6 @@ export class NotasManager {
             display: none;
         `;
 
-        
         const notasDiv = document.getElementById('notas');
         notasDiv?.insertBefore(this.mensajeElement, notasDiv.children[2]);
         notasDiv?.appendChild(this.notasContainer);
