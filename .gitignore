@@ -1,0 +1,17 @@
+# Configuraciones sensibles
+**/application.properties
+
+# Dependencias y builds
+**/node_modules/
+**/target/
+**/dist/
+**/build/
+
+# Archivos del IDE
+.idea/
+.vscode/
+.DS_Store
+*.iml
+
+# Logs
+*.log
