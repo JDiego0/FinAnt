@@ -99,13 +99,6 @@ public class TransactionService {
             throw new RuntimeException("No autorizado");
         }
 
-        // Si estaba aplicada, revertir el saldo antes de borrar
-        if (Boolean.TRUE.equals(transaction.getApplied())) {
-            Account account = transaction.getAccount();
-            revertFromBalance(account, transaction);
-            accountRepository.save(account);
-        }
-
         transactionRepository.delete(transaction);
     }
 

@@ -28,13 +28,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configure(http))  // ← agrega esta línea
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints públicos — no requieren token
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
