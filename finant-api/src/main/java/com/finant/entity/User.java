@@ -31,12 +31,6 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "security_question")
-    private String securityQuestion;
-
-    @Column(name = "security_answer")
-    private String securityAnswer;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -45,6 +39,9 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Note> notes;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<PasswordResetToken> resetTokens;
 
     @PrePersist
     public void prePersist() {
