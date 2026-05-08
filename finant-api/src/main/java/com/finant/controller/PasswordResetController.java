@@ -2,6 +2,7 @@ package com.finant.controller;
 
 import com.finant.dto.request.ForgotPasswordRequest;
 import com.finant.dto.request.ResetPasswordRequest;
+import com.finant.repository.UserRepository;
 import com.finant.service.PasswordResetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import java.util.Map;
 public class PasswordResetController {
 
     private final PasswordResetService passwordResetService;
+    private final UserRepository userRepository;
 
     @PostMapping("/forgot-password")
     public ResponseEntity<Map<String, String>> forgotPassword(
@@ -32,6 +34,13 @@ public class PasswordResetController {
             @Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request);
         return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente"));
+    }
+
+    @PostMapping("/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(
+            @RequestBody Map<String, String> body) {
+        boolean exists = userRepository.existsByEmail(body.get("email"));
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 
     @GetMapping("/validate-token")

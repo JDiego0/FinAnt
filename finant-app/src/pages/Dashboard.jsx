@@ -1,148 +1,175 @@
 import { useEffect, useState } from 'react';
+import { TrendingUp, TrendingDown, Wallet, Edit3, X, Check } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import SkeletonCard from '../components/ui/SkeletonCard';
 import api from '../api/axiosConfig';
+import { formatCOP } from '../utils/formatCurrency';
+import { toast, confirm } from '../utils/alerts';
+
+const ICONS = { Efectivo: '💵', Ahorros: '🏦', Inversiones: '📈' };
+const COLORS = { Efectivo: '#10b981', Ahorros: '#3b82f6', Inversiones: '#8b5cf6' };
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [adjusting, setAdjusting] = useState(null); // cuenta seleccionada para ajustar
+  const [adjusting, setAdjusting] = useState(null);
   const [newBalance, setNewBalance] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const fetchAccounts = () => {
-    return api.get('/accounts')
-      .then(({ data }) => setAccounts(data))
-      .finally(() => setLoading(false));
-  };
+  const load = () => api.get('/accounts').then(({ data }) => setAccounts(data)).finally(() => setLoading(false));
 
-  useEffect(() => { fetchAccounts(); }, []);
+  useEffect(() => { load(); }, []);
 
-  const total = accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+  const total = accounts.reduce((s, a) => s + Number(a.balance), 0);
 
-  const fmt = (val) => new Intl.NumberFormat('es-CO', {
-    style: 'currency', currency: 'COP', minimumFractionDigits: 0
-  }).format(val);
+  const openAdjust = (acc) => { setAdjusting(acc); setNewBalance(String(acc.balance)); };
+  const closeAdjust = () => { setAdjusting(null); setNewBalance(''); };
 
   const handleAdjust = async (e) => {
     e.preventDefault();
-    if (!adjusting) return;
     setSaving(true);
     try {
-      await api.patch(`/accounts/${adjusting.id}/balance`, {
-        newBalance: Number(newBalance)
-      });
-      await fetchAccounts();
-      setAdjusting(null);
-      setNewBalance('');
-    } catch (err) {
-      alert(err.response?.data?.error || 'Error al ajustar saldo');
-    } finally {
-      setSaving(false);
-    }
+      await api.patch(`/accounts/${adjusting.id}/balance`, { newBalance: Number(newBalance) });
+      await load();
+      toast('success', 'Saldo actualizado');
+      closeAdjust();
+    } catch { toast('error', 'Error al ajustar el saldo'); }
+    finally { setSaving(false); }
   };
 
-  const icons = { Efectivo: '💵', Ahorros: '🏦', Inversiones: '📈' };
-
   return (
-    <div>
+    <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
       <Navbar />
-      <div style={styles.container}>
-        <h2 style={styles.heading}>Resumen financiero</h2>
+      <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem' }}>
 
-        {loading ? <p>Cargando...</p> : (
-          <>
-            <div style={styles.grid}>
-              {accounts.map(acc => (
-                <div key={acc.id} style={styles.card}>
-                  <div style={styles.cardIcon}>{icons[acc.type] || '💰'}</div>
-                  <div style={styles.cardType}>{acc.type}</div>
-                  <div style={styles.cardBalance}>{fmt(acc.balance)}</div>
-                  <button
-                    style={styles.adjustBtn}
-                    onClick={() => {
-                      setAdjusting(acc);
-                      setNewBalance(acc.balance);
-                    }}
-                  >
-                    Ajustar saldo
-                  </button>
-                </div>
-              ))}
-            </div>
+        {/* Header */}
+        <div style={{ marginBottom: '2rem', animation: 'fadeIn 0.4s ease' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+            Resumen financiero
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+            Visualiza y gestiona tus cuentas
+          </p>
+        </div>
 
-            <div style={styles.total}>
-              <span>Patrimonio total</span>
-              <span style={styles.totalAmount}>{fmt(total)}</span>
-            </div>
-          </>
-        )}
-
-        {/* Modal de ajuste */}
-        {adjusting && (
-          <div style={styles.overlay}>
-            <div style={styles.modal}>
-              <h3 style={styles.modalTitle}>
-                Ajustar saldo — {adjusting.type}
-              </h3>
-              <p style={styles.modalCurrent}>
-                Saldo actual: <strong>{fmt(adjusting.balance)}</strong>
-              </p>
-              <form onSubmit={handleAdjust}>
-                <label style={styles.label}>Nuevo saldo</label>
-                <input
-                  style={styles.input}
-                  type="number"
-                  value={newBalance}
-                  onChange={e => setNewBalance(e.target.value)}
-                  min="0"
-                  step="0.01"
-                  required
-                  autoFocus
-                />
-                <div style={styles.modalActions}>
-                  <button
-                    type="button"
-                    style={styles.cancelBtn}
-                    onClick={() => { setAdjusting(null); setNewBalance(''); }}
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    style={styles.confirmBtn}
-                    disabled={saving}
-                  >
-                    {saving ? 'Guardando...' : 'Confirmar'}
-                  </button>
-                </div>
-              </form>
-            </div>
+        {/* Total card */}
+        <div style={{
+          background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+          borderRadius: '1.25rem', padding: '1.75rem 2rem',
+          marginBottom: '1.5rem', color: 'white',
+          boxShadow: '0 8px 32px rgba(79,70,229,0.25)',
+          animation: 'slideUp 0.4s ease',
+        }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.8 }}>Patrimonio total</p>
+          <p style={{ margin: '0.5rem 0 0', fontSize: '2.25rem', fontWeight: '700', letterSpacing: '-1px' }}>
+            {formatCOP(total)}
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', opacity: 0.7, fontSize: '0.8rem' }}>
+            <TrendingUp size={14} style={{ marginTop: '1px' }} />
+            <span>{accounts.length} cuentas activas</span>
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* Account cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '1rem',
+        }}>
+          {loading ? (
+            [1,2,3].map(i => <SkeletonCard key={i} />)
+          ) : accounts.map((acc, i) => (
+            <div key={acc.id} className="card" style={{
+              padding: '1.5rem', animation: `slideUp ${0.3 + i * 0.1}s ease`,
+              transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = ''; }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{
+                    width: '44px', height: '44px', borderRadius: '0.75rem',
+                    background: `${COLORS[acc.type]}15`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.4rem',
+                  }}>
+                    {ICONS[acc.type]}
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: '600', color: '#0f172a' }}>{acc.type}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>Cuenta activa</p>
+                  </div>
+                </div>
+                <div style={{
+                  width: '8px', height: '8px', borderRadius: '50%',
+                  background: COLORS[acc.type],
+                }} />
+              </div>
+
+              <div style={{ margin: '1.25rem 0 1rem' }}>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.25rem' }}>Saldo disponible</p>
+                <p style={{ margin: 0, fontSize: '1.6rem', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.5px' }}>
+                  {formatCOP(acc.balance)}
+                </p>
+              </div>
+
+              <button onClick={() => openAdjust(acc)} className="btn btn-secondary btn-full btn-sm"
+                style={{ gap: '0.4rem' }}>
+                <Edit3 size={13} /> Ajustar saldo
+              </button>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {/* Modal ajuste de saldo */}
+      {adjusting && (
+        <div style={overlay} onClick={closeAdjust}>
+          <div className="card" style={modal} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontWeight: '600', color: '#0f172a' }}>
+                  Ajustar saldo — {adjusting.type}
+                </h3>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+                  Actual: {formatCOP(adjusting.balance)}
+                </p>
+              </div>
+              <button onClick={closeAdjust} className="btn btn-ghost btn-sm" style={{ padding: '0.25rem' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAdjust}>
+              <label className="label">Nuevo saldo</label>
+              <input className="input" type="number" value={newBalance}
+                onChange={e => setNewBalance(e.target.value)}
+                min="0" step="1" required autoFocus
+                style={{ marginBottom: '1.25rem', fontSize: '1.1rem' }} />
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button type="button" onClick={closeAdjust} className="btn btn-secondary" style={{ flex: 1 }}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={saving}>
+                  {saving ? 'Guardando...' : <><Check size={16} /> Confirmar</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-const styles = {
-  container: { maxWidth: '900px', margin: '2rem auto', padding: '0 1rem' },
-  heading: { fontSize: '1.4rem', marginBottom: '1.5rem', color: '#1a1a2e' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' },
-  card: { background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' },
-  cardIcon: { fontSize: '2rem' },
-  cardType: { color: '#666', fontSize: '0.9rem' },
-  cardBalance: { fontSize: '1.4rem', fontWeight: '700', color: '#1a1a2e' },
-  adjustBtn: { marginTop: '0.5rem', padding: '6px 14px', background: '#f0f0f0', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', color: '#444' },
-  total: { marginTop: '1.5rem', background: '#4f46e5', color: 'white', borderRadius: '12px', padding: '1.2rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  totalAmount: { fontSize: '1.5rem', fontWeight: '700' },
-  // Modal
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
-  modal: { background: 'white', borderRadius: '14px', padding: '2rem', width: '100%', maxWidth: '380px', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' },
-  modalTitle: { margin: '0 0 0.5rem', fontSize: '1.1rem', color: '#1a1a2e' },
-  modalCurrent: { color: '#666', fontSize: '0.9rem', marginBottom: '1.2rem' },
-  label: { display: 'block', marginBottom: '6px', fontWeight: '500', fontSize: '0.9rem' },
-  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', boxSizing: 'border-box', marginBottom: '1.2rem' },
-  modalActions: { display: 'flex', gap: '0.8rem', justifyContent: 'flex-end' },
-  cancelBtn: { padding: '8px 18px', background: '#f0f0f0', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' },
-  confirmBtn: { padding: '8px 18px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem' },
+const overlay = {
+  position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.6)',
+  backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center',
+  justifyContent: 'center', zIndex: 100, padding: '1rem',
+  animation: 'fadeIn 0.2s ease',
+};
+const modal = {
+  width: '100%', maxWidth: '400px', padding: '1.75rem',
+  animation: 'slideUp 0.3s ease',
 };

@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axiosConfig';
+import Spinner from '../components/ui/Spinner';
+import { toast } from '../utils/alerts';
 
 export default function Login() {
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+  const [form, setForm]       = useState({ email: '', password: '' });
+  const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [error, setError]     = useState('');
+  const { login }             = useAuth();
+  const navigate              = useNavigate();
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,67 +23,133 @@ export default function Login() {
     try {
       const { data } = await api.post('/auth/login', form);
       login(data);
+      toast('success', `¡Bienvenido, ${data.name.split(' ')[0]}!`);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al iniciar sesión');
+      setError(err.response?.data?.error || 'Credenciales incorrectas');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2 style={styles.title}>FinAnt</h2>
-        <p style={styles.subtitle}>Inicia sesión en tu cuenta</p>
+    <div style={S.page}>
+      <div style={S.glow} />
 
-        {error && <div style={styles.error}>{error}</div>}
+      <div style={{ width: '100%', maxWidth: '420px', padding: '1rem' }}>
+        <div className="card" style={S.card}>
 
-        <form onSubmit={handleSubmit}>
-          <div style={styles.field}>
-            <label style={styles.label}>Correo</label>
-            <input
-              style={styles.input}
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
+          {/* Header dentro del card */}
+          <div style={S.header}>
+            <span style={{ fontSize: '2.5rem', lineHeight: 1 }}>🐜</span>
+            <h1 style={S.brand}>
+              Fin<span style={{ color: '#818cf8' }}>Ant</span>
+            </h1>
+            <p style={S.subtitle}>Tu gestor financiero personal</p>
           </div>
-          <div style={styles.field}>
-            <label style={styles.label}>Contraseña</label>
-            <input
-              style={styles.input}
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <button style={styles.button} type="submit" disabled={loading}>
-            {loading ? 'Ingresando...' : 'Ingresar'}
-          </button>
-        </form>
 
-        <p style={styles.link}>
-          ¿No tienes cuenta? <Link to="/register">Regístrate</Link>
-        </p>
+          <div style={S.divider} />
+
+          <h2 style={S.formTitle}>Iniciar sesión</h2>
+
+          {error && <div style={S.errorBox}>{error}</div>}
+
+          <form onSubmit={handleSubmit} style={S.form}>
+            <div>
+              <label className="label">Correo electrónico</label>
+              <input className="input" name="email" type="email"
+                placeholder="tu@correo.com" value={form.email}
+                onChange={handle} required />
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                <label className="label" style={{ margin: 0 }}>Contraseña</label>
+                <Link to="/forgot-password" style={S.forgotLink}>
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+              <div style={{ position: 'relative' }}>
+                <input className="input" name="password"
+                  type={show ? 'text' : 'password'}
+                  placeholder="••••••••" value={form.password}
+                  onChange={handle} required
+                  style={{ paddingRight: '2.75rem' }} />
+                <button type="button" onClick={() => setShow(!show)} style={S.eyeBtn}>
+                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary btn-full btn-lg"
+              disabled={loading} style={{ marginTop: '0.25rem' }}>
+              {loading
+                ? <><Spinner size={18} color="white" />Ingresando...</>
+                : <><LogIn size={18} />Ingresar</>}
+            </button>
+          </form>
+
+          <p style={S.switchText}>
+            ¿No tienes cuenta?{' '}
+            <Link to="/register" style={S.switchLink}>Regístrate gratis</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
 
-const styles = {
-  container: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5' },
-  card: { background: 'white', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '400px', boxShadow: '0 2px 16px rgba(0,0,0,0.1)' },
-  title: { margin: 0, fontSize: '1.8rem', color: '#1a1a2e' },
-  subtitle: { color: '#666', marginBottom: '1.5rem' },
-  field: { marginBottom: '1rem' },
-  label: { display: 'block', marginBottom: '4px', fontWeight: '500', fontSize: '0.9rem' },
-  input: { width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '1rem', boxSizing: 'border-box' },
-  button: { width: '100%', padding: '12px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '8px', fontSize: '1rem', cursor: 'pointer', marginTop: '0.5rem' },
-  error: { background: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' },
-  link: { textAlign: 'center', marginTop: '1rem', color: '#666' },
+const S = {
+  page: {
+    minHeight: '100vh', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', padding: '1rem',
+    background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+    position: 'relative', overflow: 'hidden',
+  },
+  glow: {
+    position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)',
+    width: '500px', height: '500px', borderRadius: '50%', pointerEvents: 'none',
+    background: 'radial-gradient(circle, rgba(79,70,229,0.18) 0%, transparent 70%)',
+  },
+  card: {
+    padding: '2rem', animation: 'slideUp 0.4s ease',
+  },
+  header: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    gap: '0.4rem', paddingBottom: '1.25rem', textAlign: 'center',
+  },
+  brand: {
+    margin: 0, fontSize: '1.75rem', fontWeight: '800',
+    color: '#0f172a', letterSpacing: '-0.5px',
+  },
+  subtitle: {
+    margin: 0, fontSize: '0.82rem', color: '#94a3b8',
+  },
+  divider: {
+    height: '1px', background: '#f1f5f9', margin: '0 0 1.25rem',
+  },
+  formTitle: {
+    margin: '0 0 1.25rem', fontSize: '1rem',
+    fontWeight: '600', color: '#374151',
+  },
+  form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  forgotLink: {
+    fontSize: '0.78rem', color: '#4f46e5',
+    textDecoration: 'none', fontWeight: '500',
+  },
+  eyeBtn: {
+    position: 'absolute', right: '0.75rem', top: '50%',
+    transform: 'translateY(-50%)', background: 'none',
+    border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0,
+  },
+  errorBox: {
+    background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
+    padding: '0.75rem 1rem', borderRadius: '0.625rem',
+    fontSize: '0.85rem', marginBottom: '1rem',
+  },
+  switchText: {
+    textAlign: 'center', margin: '1.25rem 0 0',
+    fontSize: '0.85rem', color: '#64748b',
+  },
+  switchLink: { color: '#4f46e5', fontWeight: '600', textDecoration: 'none' },
 };
