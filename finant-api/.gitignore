@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Environment files ###
+.env
+.env.local
+.env.production
+
+### Java compiled files ###
+*.class
