@@ -1,22 +1,62 @@
-# ── Credenciales sensibles (NUNCA subir) ──────────────────────────
+# ═══════════════════════════════════════════════
+#  CREDENCIALES — NUNCA subir al repositorio
+# ═══════════════════════════════════════════════
 **/application.properties
-.env
-.env.local
-.env.production
+**/.env
+**/.env.local
+**/.env.production
+**/.env.*.local
 
-# ── Dependencias y builds ─────────────────────────────────────────
-**/node_modules/
+# ═══════════════════════════════════════════════
+#  BACKEND — Java / Maven / Spring Boot
+# ═══════════════════════════════════════════════
 **/target/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+**/hs_err_pid*
+**/replay_pid*
+**/maven-wrapper.jar
+
+# ═══════════════════════════════════════════════
+#  FRONTEND — Node / Vite / React
+# ═══════════════════════════════════════════════
+**/node_modules/
 **/dist/
 **/build/
+**/.vite/
+**/coverage/
 
-# ── IDE ───────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════
+#  IDEs
+# ═══════════════════════════════════════════════
 .idea/
 .vscode/
-.DS_Store
 *.iml
 *.iws
 *.ipr
+.classpath
+.project
+.settings/
+.factorypath
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
 
-# ── Logs ──────────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════
+#  Sistema operativo
+# ═══════════════════════════════════════════════
+.DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ═══════════════════════════════════════════════
+#  Logs
+# ═══════════════════════════════════════════════
 *.log
+logs/
