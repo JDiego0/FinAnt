@@ -64,10 +64,7 @@ export default function Navbar() {
 
         {/* User + logout */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{
-            fontSize: '0.8rem', color: '#64748b',
-            display: window.innerWidth < 640 ? 'none' : 'block'
-          }}>
+          <span style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: '500' }}>
             {user?.name?.split(' ')[0]}
           </span>
           <button onClick={handleLogout} className="btn btn-ghost btn-sm"

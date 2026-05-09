@@ -1,17 +1,22 @@
-# Configuraciones sensibles
+# ── Credenciales sensibles (NUNCA subir) ──────────────────────────
 **/application.properties
+.env
+.env.local
+.env.production
 
-# Dependencias y builds
+# ── Dependencias y builds ─────────────────────────────────────────
 **/node_modules/
 **/target/
 **/dist/
 **/build/
 
-# Archivos del IDE
+# ── IDE ───────────────────────────────────────────────────────────
 .idea/
 .vscode/
 .DS_Store
 *.iml
+*.iws
+*.ipr
 
-# Logs
+# ── Logs ──────────────────────────────────────────────────────────
 *.log
