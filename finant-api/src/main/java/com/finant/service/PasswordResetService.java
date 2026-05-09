@@ -46,7 +46,13 @@ public class PasswordResetService {
                     .build();
 
             tokenRepository.save(resetToken);
-            emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
+
+            try {
+                emailService.sendPasswordResetEmail(user.getEmail(), user.getName(), token);
+            } catch (Exception e) {
+                log.error("No se pudo enviar correo de recuperación a {}: {}",
+                        user.getEmail(), e.getMessage());
+            }
         });
     }
 
