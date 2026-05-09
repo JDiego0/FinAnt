@@ -38,11 +38,15 @@ export default function Transactions() {
   }, []);
 
   // ── Helpers ──────────────────────────────────────────────────────
-  const getAccount  = (id) => accounts.find(a => a.id === id);
-  const resetForm   = ()   => setForm({
-    accountId: '', type: 'income',
-    date: new Date().toISOString().split('T')[0],
-    description: '', amount: '', applied: false,
+  const getAccount = (id) => accounts.find(a => a.id === id);
+
+  const resetForm = () => setForm({
+    accountId:   '',
+    type:        'income',
+    date:        new Date().toISOString().split('T')[0],
+    description: '',
+    amount:      '',
+    applied:     false,
   });
 
   // ── Crear movimiento ─────────────────────────────────────────────
@@ -69,17 +73,14 @@ export default function Transactions() {
   // ── Toggle aplicado (optimista) ──────────────────────────────────
   const handleToggle = async (id) => {
     setToggling(id);
-    // Actualización optimista inmediata
     setTransactions(prev =>
       prev.map(t => t.id === id ? { ...t, applied: !t.applied } : t)
     );
     try {
       await api.patch(`/transactions/${id}/toggle`);
-      // Refrescar saldos en background sin bloquear la UI
       api.get('/accounts').then(({ data }) => setAccounts(data));
       toast('success', 'Estado actualizado');
     } catch {
-      // Revertir si falló
       setTransactions(prev =>
         prev.map(t => t.id === id ? { ...t, applied: !t.applied } : t)
       );
@@ -114,7 +115,10 @@ export default function Transactions() {
       <main style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem 1rem' }}>
 
         {/* Encabezado */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <div style={{
+          display: 'flex', justifyContent: 'space-between',
+          alignItems: 'center', marginBottom: '1.5rem',
+        }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
               Movimientos
@@ -128,11 +132,14 @@ export default function Transactions() {
           </button>
         </div>
 
-        {/* ── Modal: nuevo movimiento ── */}
+        {/* ── Modal: nuevo movimiento ─────────────────────────────── */}
         {showForm && (
           <div style={S.overlay} onClick={() => { setShowForm(false); resetForm(); }}>
-            <div className="card" style={S.modal} onClick={e => e.stopPropagation()}>
-
+            <div
+              className="card"
+              style={S.modal}
+              onClick={e => e.stopPropagation()}
+            >
               <div style={S.modalHeader}>
                 <h3 style={{ margin: 0, fontWeight: '600', color: '#0f172a' }}>
                   Nuevo movimiento
@@ -146,14 +153,20 @@ export default function Transactions() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-
+              <form
+                onSubmit={handleSubmit}
+                style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}
+              >
                 {/* Cuenta + Tipo */}
                 <div style={S.grid2}>
                   <div>
                     <label className="label">Cuenta</label>
-                    <select className="input" value={form.accountId}
-                      onChange={e => setForm({ ...form, accountId: e.target.value })} required>
+                    <select
+                      className="input"
+                      value={form.accountId}
+                      onChange={e => setForm({ ...form, accountId: e.target.value })}
+                      required
+                    >
                       <option value="">Seleccionar</option>
                       {accounts.map(a => (
                         <option key={a.id} value={a.id}>{a.type}</option>
@@ -162,8 +175,11 @@ export default function Transactions() {
                   </div>
                   <div>
                     <label className="label">Tipo</label>
-                    <select className="input" value={form.type}
-                      onChange={e => setForm({ ...form, type: e.target.value })}>
+                    <select
+                      className="input"
+                      value={form.type}
+                      onChange={e => setForm({ ...form, type: e.target.value })}
+                    >
                       <option value="income">💚 Ingreso</option>
                       <option value="expense">🔴 Egreso</option>
                     </select>
@@ -174,24 +190,37 @@ export default function Transactions() {
                 <div style={S.grid2}>
                   <div>
                     <label className="label">Fecha</label>
-                    <input className="input" type="date" value={form.date}
-                      onChange={e => setForm({ ...form, date: e.target.value })} required />
+                    <input
+                      className="input"
+                      type="date"
+                      value={form.date}
+                      onChange={e => setForm({ ...form, date: e.target.value })}
+                      required
+                    />
                   </div>
                   <div>
                     <label className="label">Valor (COP)</label>
-                    <input className="input" type="number" placeholder="0"
+                    <input
+                      className="input"
+                      type="number"
+                      placeholder="0"
                       value={form.amount}
                       onChange={e => setForm({ ...form, amount: e.target.value })}
-                      required min="1" />
+                      required
+                      min="1"
+                    />
                   </div>
                 </div>
 
                 {/* Descripción */}
                 <div>
                   <label className="label">Descripción</label>
-                  <input className="input" placeholder="Ej: Pago de nómina"
+                  <input
+                    className="input"
+                    placeholder="Ej: Pago de nómina"
                     value={form.description}
-                    onChange={e => setForm({ ...form, description: e.target.value })} />
+                    onChange={e => setForm({ ...form, description: e.target.value })}
+                  />
                 </div>
 
                 {/* Checkbox aplicar */}
@@ -207,13 +236,20 @@ export default function Transactions() {
 
                 {/* Acciones */}
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
-                  <button type="button"
+                  <button
+                    type="button"
                     onClick={() => { setShowForm(false); resetForm(); }}
-                    className="btn btn-secondary" style={{ flex: 1 }}>
+                    className="btn btn-secondary"
+                    style={{ flex: 1 }}
+                  >
                     Cancelar
                   </button>
-                  <button type="submit" className="btn btn-primary"
-                    style={{ flex: 1 }} disabled={submitting}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    style={{ flex: 1 }}
+                    disabled={submitting}
+                  >
                     {submitting
                       ? <><Spinner size={16} color="white" />Guardando...</>
                       : 'Registrar movimiento'
@@ -225,7 +261,7 @@ export default function Transactions() {
           </div>
         )}
 
-        {/* ── Lista de transacciones ── */}
+        {/* ── Lista de transacciones ──────────────────────────────── */}
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
             <Spinner size={36} />
@@ -250,60 +286,72 @@ export default function Transactions() {
                   key={t.id}
                   className="card"
                   style={{
-                    padding: '1rem 1.25rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '1rem',
+                    padding: '0.875rem 1rem',
                     animation: `slideUp ${0.1 + i * 0.03}s ease`,
-                    opacity: t.applied ? 1 : 0.6,
+                    opacity: t.applied ? 1 : 0.65,
                     borderLeft: `3px solid ${isIncome ? '#22c55e' : '#ef4444'}`,
                     transition: 'box-shadow 0.2s, opacity 0.3s',
                   }}
                 >
-                  {/* Ícono tipo */}
+                  {/* ── Fila 1: ícono + info + monto ── */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+
+                    {/* Ícono tipo */}
+                    <div style={{
+                      width: '36px', height: '36px', borderRadius: '0.5rem',
+                      flexShrink: 0,
+                      background: isIncome ? '#dcfce7' : '#fef2f2',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {isIncome
+                        ? <TrendingUp   size={15} color="#16a34a" />
+                        : <TrendingDown size={15} color="#dc2626" />
+                      }
+                    </div>
+
+                    {/* Descripción + meta */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{
+                        margin: 0, fontWeight: '500', color: '#0f172a',
+                        fontSize: '0.875rem',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {t.description || 'Sin descripción'}
+                      </p>
+                      <p style={{
+                        margin: '0.15rem 0 0', fontSize: '0.72rem', color: '#94a3b8',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {acc?.type ?? '—'} · {t.date}
+                        {!t.applied && (
+                          <span style={{
+                            marginLeft: '0.4rem', color: '#f59e0b', fontWeight: '600',
+                          }}>
+                            · Pendiente
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Monto */}
+                    <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                      <p style={{
+                        margin: 0, fontWeight: '700', fontSize: '0.875rem',
+                        color: isIncome ? '#16a34a' : '#dc2626',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {isIncome ? '+' : '−'}{formatCOP(t.amount)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ── Fila 2: acciones ── */}
                   <div style={{
-                    width: '38px', height: '38px', borderRadius: '0.625rem', flexShrink: 0,
-                    background: isIncome ? '#dcfce7' : '#fef2f2',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    display: 'flex', justifyContent: 'flex-end',
+                    gap: '0.375rem', marginTop: '0.625rem',
                   }}>
-                    {isIncome
-                      ? <TrendingUp  size={16} color="#16a34a" />
-                      : <TrendingDown size={16} color="#dc2626" />
-                    }
-                  </div>
 
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                      margin: 0, fontWeight: '500', color: '#0f172a', fontSize: '0.9rem',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {t.description || 'Sin descripción'}
-                    </p>
-                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>
-                      {acc?.type ?? '—'} · {t.date}
-                      {!t.applied && (
-                        <span style={{ marginLeft: '0.5rem', color: '#f59e0b', fontWeight: '600' }}>
-                          · Pendiente
-                        </span>
-                      )}
-                    </p>
-                  </div>
-
-                  {/* Monto */}
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{
-                      margin: 0, fontWeight: '700', fontSize: '0.95rem',
-                      color: isIncome ? '#16a34a' : '#dc2626',
-                    }}>
-                      {isIncome ? '+' : '−'}{formatCOP(t.amount)}
-                    </p>
-                  </div>
-
-                  {/* Acciones */}
-                  <div style={{ display: 'flex', gap: '0.375rem', flexShrink: 0 }}>
-
-                    {/* Toggle aplicado */}
+                    {/* Toggle */}
                     <button
                       onClick={() => handleToggle(t.id)}
                       disabled={isBusy}
@@ -312,16 +360,16 @@ export default function Transactions() {
                       style={{
                         background: t.applied ? '#dcfce7' : '#f1f5f9',
                         color:      t.applied ? '#16a34a' : '#94a3b8',
-                        padding: '0.375rem 0.5rem',
-                        minWidth: '34px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0.3rem 0.625rem', fontSize: '0.75rem',
+                        gap: '0.3rem', display: 'flex', alignItems: 'center',
                         transition: 'background 0.2s, color 0.2s',
                       }}
                     >
                       {isBusy
-                        ? <Spinner size={13} color={t.applied ? '#16a34a' : '#94a3b8'} />
-                        : <Check size={14} />
+                        ? <Spinner size={12} color={t.applied ? '#16a34a' : '#94a3b8'} />
+                        : <Check size={13} />
                       }
+                      <span>{t.applied ? 'Hecho' : 'Pendiente'}</span>
                     </button>
 
                     {/* Eliminar */}
@@ -329,10 +377,14 @@ export default function Transactions() {
                       onClick={() => handleDelete(t.id)}
                       disabled={isBusy}
                       className="btn btn-danger btn-sm"
-                      title="Eliminar movimiento"
-                      style={{ padding: '0.375rem 0.5rem' }}
+                      title="Eliminar"
+                      style={{
+                        padding: '0.3rem 0.625rem', fontSize: '0.75rem',
+                        display: 'flex', alignItems: 'center', gap: '0.3rem',
+                      }}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
+                      <span>Eliminar</span>
                     </button>
                   </div>
                 </div>

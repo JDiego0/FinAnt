@@ -5,19 +5,32 @@ import api from '../api/axiosConfig';
 import Spinner from '../components/ui/Spinner';
 import { toast } from '../utils/alerts';
 
+// ── PageWrapper FUERA del componente principal ──────────────────────
+function PageWrapper({ children }) {
+  return (
+    <div style={S.page}>
+      <div style={S.glow} />
+      <div style={{ width: '100%', maxWidth: '420px', padding: '1rem' }}>
+        <div className="card" style={S.card}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ResetPassword() {
   const [params]   = useSearchParams();
   const navigate   = useNavigate();
   const token      = params.get('token');
 
-  const [status,  setStatus]  = useState('validating'); // validating | valid | invalid | success
+  const [status,  setStatus]  = useState('validating');
   const [form,    setForm]    = useState({ newPassword: '', confirmPassword: '' });
   const [showP1,  setShowP1]  = useState(false);
   const [showP2,  setShowP2]  = useState(false);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
-  // ── Validar token al cargar ──────────────────────────────────────
   useEffect(() => {
     if (!token) { setStatus('invalid'); return; }
     api.get(`/auth/validate-token?token=${token}`)
@@ -25,7 +38,11 @@ export default function ResetPassword() {
       .catch(()        => setStatus('invalid'));
   }, [token]);
 
-  // ── Enviar nueva contraseña ──────────────────────────────────────
+  const handleChange = (field) => (e) => {
+    setForm(prev => ({ ...prev, [field]: e.target.value }));
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -52,19 +69,12 @@ export default function ResetPassword() {
     }
   };
 
-  // ── Pantalla base compartida ─────────────────────────────────────
-  const PageWrapper = ({ children }) => (
-    <div style={S.page}>
-      <div style={S.glow} />
-      <div style={{ width: '100%', maxWidth: '420px', padding: '1rem' }}>
-        <div className="card" style={S.card}>
-          {children}
-        </div>
-      </div>
-    </div>
-  );
+  const passwordsMatch = form.confirmPassword.length > 0 &&
+    form.newPassword === form.confirmPassword;
+  const passwordsMismatch = form.confirmPassword.length > 0 &&
+    form.newPassword !== form.confirmPassword;
 
-  // ── Estados de carga ─────────────────────────────────────────────
+  // ── Validando token ────────────────────────────────────────────────
   if (status === 'validating') return (
     <PageWrapper>
       <div style={S.center}>
@@ -74,19 +84,22 @@ export default function ResetPassword() {
     </PageWrapper>
   );
 
-  // ── Token inválido ───────────────────────────────────────────────
+  // ── Token inválido ─────────────────────────────────────────────────
   if (status === 'invalid') return (
     <PageWrapper>
       <div style={S.center}>
         <div style={{ ...S.iconWrap, background: '#fef2f2' }}>
           <XCircle size={26} color="#dc2626" />
         </div>
-        <h2 style={S.title}>Enlace inválido o expirado</h2>
-        <p style={S.desc}>
+        <h2 style={S.stateTitle}>Enlace inválido o expirado</h2>
+        <p style={S.stateDesc}>
           Este enlace ya fue usado o expiró. Los enlaces son válidos por 30 minutos.
         </p>
-        <Link to="/forgot-password" className="btn btn-primary btn-full"
-          style={{ marginTop: '1.5rem', textDecoration: 'none' }}>
+        <Link
+          to="/forgot-password"
+          className="btn btn-primary btn-full"
+          style={{ marginTop: '1.5rem', textDecoration: 'none', display: 'flex' }}
+        >
           Solicitar nuevo enlace
         </Link>
         <div style={S.back}>
@@ -98,28 +111,27 @@ export default function ResetPassword() {
     </PageWrapper>
   );
 
-  // ── Éxito ────────────────────────────────────────────────────────
+  // ── Éxito ──────────────────────────────────────────────────────────
   if (status === 'success') return (
     <PageWrapper>
       <div style={S.center}>
         <div style={{ ...S.iconWrap, background: '#f0fdf4' }}>
           <CheckCircle size={26} color="#16a34a" />
         </div>
-        <h2 style={S.title}>¡Contraseña actualizada!</h2>
-        <p style={S.desc}>
+        <h2 style={S.stateTitle}>¡Contraseña actualizada!</h2>
+        <p style={S.stateDesc}>
           Tu contraseña fue cambiada exitosamente. Redirigiendo al login...
         </p>
-        <div style={{ marginTop: '1rem' }}>
-          <Spinner size={20} color="#4f46e5" />
+        <div style={{ marginTop: '1.25rem' }}>
+          <Spinner size={22} color="#4f46e5" />
         </div>
       </div>
     </PageWrapper>
   );
 
-  // ── Formulario principal ─────────────────────────────────────────
+  // ── Formulario ─────────────────────────────────────────────────────
   return (
     <PageWrapper>
-      {/* Header */}
       <div style={S.header}>
         <div style={S.iconWrap}>
           <Lock size={22} color="#4f46e5" />
@@ -134,9 +146,7 @@ export default function ResetPassword() {
 
       <h2 style={S.formTitle}>Nueva contraseña</h2>
 
-      {error && (
-        <div style={S.errorBox}>{error}</div>
-      )}
+      {error && <div style={S.errorBox}>{error}</div>}
 
       <form onSubmit={handleSubmit} style={S.form}>
 
@@ -149,13 +159,17 @@ export default function ResetPassword() {
               type={showP1 ? 'text' : 'password'}
               placeholder="Mínimo 6 caracteres"
               value={form.newPassword}
-              onChange={e => { setForm({ ...form, newPassword: e.target.value }); setError(''); }}
+              onChange={handleChange('newPassword')}
               required
               minLength={6}
               autoFocus
               style={{ paddingRight: '2.75rem' }}
             />
-            <button type="button" onClick={() => setShowP1(!showP1)} style={S.eyeBtn}>
+            <button
+              type="button"
+              onClick={() => setShowP1(p => !p)}
+              style={S.eyeBtn}
+            >
               {showP1 ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
@@ -170,29 +184,39 @@ export default function ResetPassword() {
               type={showP2 ? 'text' : 'password'}
               placeholder="Repite la contraseña"
               value={form.confirmPassword}
-              onChange={e => { setForm({ ...form, confirmPassword: e.target.value }); setError(''); }}
+              onChange={handleChange('confirmPassword')}
               required
-              style={{ paddingRight: '2.75rem' }}
+              style={{
+                paddingRight: '2.75rem',
+                borderColor: passwordsMismatch
+                  ? '#ef4444'
+                  : passwordsMatch
+                  ? '#22c55e'
+                  : undefined,
+              }}
             />
-            <button type="button" onClick={() => setShowP2(!showP2)} style={S.eyeBtn}>
+            <button
+              type="button"
+              onClick={() => setShowP2(p => !p)}
+              style={S.eyeBtn}
+            >
               {showP2 ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
 
-          {/* Indicador de coincidencia */}
-          {form.confirmPassword && (
-            <p style={{
-              margin: '0.35rem 0 0',
-              fontSize: '0.78rem',
-              color: form.newPassword === form.confirmPassword ? '#16a34a' : '#dc2626',
-              display: 'flex', alignItems: 'center', gap: '0.3rem',
-            }}>
-              {form.newPassword === form.confirmPassword
-                ? <><CheckCircle size={12} /> Las contraseñas coinciden</>
-                : <><XCircle size={12} /> Las contraseñas no coinciden</>
-              }
-            </p>
-          )}
+          {/* Indicador coincidencia — sin condicional que desmonte */}
+          <div style={{ minHeight: '20px', marginTop: '0.35rem' }}>
+            {passwordsMatch && (
+              <p style={{ ...S.matchText, color: '#16a34a' }}>
+                <CheckCircle size={12} /> Las contraseñas coinciden
+              </p>
+            )}
+            {passwordsMismatch && (
+              <p style={{ ...S.matchText, color: '#ef4444' }}>
+                <XCircle size={12} /> Las contraseñas no coinciden
+              </p>
+            )}
+          </div>
         </div>
 
         <button
@@ -217,7 +241,6 @@ export default function ResetPassword() {
   );
 }
 
-// ── Estilos ──────────────────────────────────────────────────────────
 const S = {
   page: {
     minHeight: '100vh',
@@ -227,8 +250,10 @@ const S = {
     position: 'relative', overflow: 'hidden',
   },
   glow: {
-    position: 'absolute', top: '-10%', left: '50%', transform: 'translateX(-50%)',
-    width: '500px', height: '500px', borderRadius: '50%', pointerEvents: 'none',
+    position: 'absolute', top: '-10%', left: '50%',
+    transform: 'translateX(-50%)',
+    width: '500px', height: '500px', borderRadius: '50%',
+    pointerEvents: 'none',
     background: 'radial-gradient(circle, rgba(79,70,229,0.18) 0%, transparent 70%)',
   },
   card: { padding: '2rem', animation: 'slideUp 0.4s ease' },
@@ -247,7 +272,10 @@ const S = {
   },
   subtitle: { margin: 0, fontSize: '0.82rem', color: '#94a3b8' },
   divider: { height: '1px', background: '#f1f5f9', margin: '0 0 1.25rem' },
-  formTitle: { margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: '600', color: '#374151' },
+  formTitle: {
+    margin: '0 0 1.25rem', fontSize: '1rem',
+    fontWeight: '600', color: '#374151',
+  },
   form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   errorBox: {
     background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
@@ -256,19 +284,31 @@ const S = {
   },
   eyeBtn: {
     position: 'absolute', right: '0.75rem', top: '50%',
-    transform: 'translateY(-50%)', background: 'none',
-    border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0,
+    transform: 'translateY(-50%)',
+    background: 'none', border: 'none',
+    cursor: 'pointer', color: '#94a3b8', padding: 0,
+  },
+  matchText: {
+    margin: 0, fontSize: '0.78rem',
+    display: 'flex', alignItems: 'center', gap: '0.3rem',
   },
   center: {
     display: 'flex', flexDirection: 'column',
     alignItems: 'center', textAlign: 'center', padding: '1rem 0',
   },
   loadingText: { color: '#64748b', fontSize: '0.9rem', marginTop: '1rem' },
-  title: { margin: '1rem 0 0.5rem', fontSize: '1.15rem', fontWeight: '700', color: '#0f172a' },
-  desc: { margin: 0, fontSize: '0.875rem', color: '#64748b', lineHeight: 1.6 },
+  stateTitle: {
+    margin: '1rem 0 0.5rem', fontSize: '1.15rem',
+    fontWeight: '700', color: '#0f172a',
+  },
+  stateDesc: {
+    margin: 0, fontSize: '0.875rem',
+    color: '#64748b', lineHeight: 1.6,
+  },
   back: { textAlign: 'center', marginTop: '1.5rem' },
   backLink: {
     display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-    fontSize: '0.85rem', color: '#64748b', textDecoration: 'none', fontWeight: '500',
+    fontSize: '0.85rem', color: '#64748b',
+    textDecoration: 'none', fontWeight: '500',
   },
 };
