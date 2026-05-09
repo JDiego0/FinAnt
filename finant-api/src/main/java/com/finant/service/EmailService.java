@@ -1,19 +1,24 @@
 package com.finant.service;
 
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
+    @Value("${app.brevo.api-key}")
+    private String brevoApiKey;
 
     @Value("${app.mail.from}")
     private String fromEmail;
@@ -27,26 +32,38 @@ public class EmailService {
     // ── Bienvenida ───────────────────────────────────────────────────
     public void sendWelcomeEmail(String toEmail, String userName) {
         String dashboardLink = frontendUrl + "/dashboard";
-        send(toEmail, "¡Bienvenido a FinAnt! 🐜", buildWelcomeHtml(userName, dashboardLink));
+        send(toEmail, userName, "¡Bienvenido a FinAnt! 🐜", buildWelcomeHtml(userName, dashboardLink));
     }
 
     // ── Recuperación ─────────────────────────────────────────────────
     public void sendPasswordResetEmail(String toEmail, String userName, String token) {
         String resetLink = frontendUrl + "/reset-password?token=" + token;
-        send(toEmail, "Recuperar contraseña — FinAnt", buildResetHtml(userName, resetLink));
+        send(toEmail, userName, "Recuperar contraseña — FinAnt", buildResetHtml(userName, resetLink));
     }
 
-    // ── Método base ──────────────────────────────────────────────────
-    private void send(String to, String subject, String html) {
+    // ── Envío vía API HTTP de Brevo (no SMTP) ────────────────────────
+    private void send(String to, String toName, String subject, String html) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(html, true);
-            mailSender.send(message);
-            log.info("Email '{}' enviado a: {}", subject, to);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("api-key", brevoApiKey);
+
+            Map<String, Object> body = Map.of(
+                    "sender", Map.of("name", fromName, "email", fromEmail),
+                    "to", List.of(Map.of("email", to, "name", toName != null ? toName : to)),
+                    "subject", subject,
+                    "htmlContent", html
+            );
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(BREVO_API_URL, request, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("Email '{}' enviado a: {}", subject, to);
+            } else {
+                log.error("Brevo respondió con status {}: {}", response.getStatusCode(), response.getBody());
+                throw new RuntimeException("Error al enviar el correo.");
+            }
         } catch (Exception e) {
             log.error("Error al enviar email a {}: {}", to, e.getMessage());
             throw new RuntimeException("Error al enviar el correo.");
