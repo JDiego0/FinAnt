@@ -34,7 +34,9 @@ export default function Transactions() {
   };
 
   useEffect(() => {
-    reload().finally(() => setLoading(false));
+    reload()
+      .catch(() => toast('error', 'Error al cargar los movimientos'))
+      .finally(() => setLoading(false));
   }, []);
 
   // ── Helpers ──────────────────────────────────────────────────────

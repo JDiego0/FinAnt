@@ -16,7 +16,10 @@ export default function Dashboard() {
   const [newBalance, setNewBalance] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const load = () => api.get('/accounts').then(({ data }) => setAccounts(data)).finally(() => setLoading(false));
+  const load = () => api.get('/accounts')
+    .then(({ data }) => setAccounts(data))
+    .catch(() => toast('error', 'Error al cargar las cuentas'))
+    .finally(() => setLoading(false));
 
   useEffect(() => { load(); }, []);
 

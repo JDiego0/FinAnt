@@ -1,5 +1,6 @@
 spring.application.name=finant-api
 
+# ── Base de datos PostgreSQL (Supabase) ──────────────────
 spring.datasource.url=jdbc:postgresql://HOST:5432/postgres
 spring.datasource.username=TU_USUARIO
 spring.datasource.password=TU_PASSWORD
@@ -10,25 +11,22 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 
+# ── Servidor ─────────────────────────────────────────────
 server.port=8080
 
+# ── JWT ──────────────────────────────────────────────────
 jwt.secret=CLAVE_SECRETA_MINIMO_32_CARACTERES
 jwt.expiration=86400000
 
-spring.mail.host=smtp-relay.brevo.com
-spring.mail.port=587
-spring.mail.username=TU_USUARIO_BREVO
-spring.mail.password=TU_PASSWORD_BREVO
-spring.mail.properties.mail.smtp.auth=true
-spring.mail.properties.mail.smtp.starttls.enable=true
-spring.mail.properties.mail.smtp.starttls.required=true
-spring.mail.properties.mail.smtp.ssl.trust=smtp-relay.brevo.com
-spring.mail.properties.mail.smtp.ssl.checkserveridentity=false
-spring.mail.properties.mail.smtp.connectiontimeout=5000
-spring.mail.properties.mail.smtp.timeout=5000
-spring.mail.properties.mail.smtp.writetimeout=5000
+# ── Brevo HTTP API (envío de correos) ────────────────────
+app.brevo.api-key=TU_API_KEY_BREVO
 
-app.mail.from=TU_EMAIL
+# ── Email ────────────────────────────────────────────────
+app.mail.from=TU_EMAIL_VERIFICADO_EN_BREVO
 app.mail.from-name=FinAnt
+
+# ── Frontend URL ─────────────────────────────────────────
 app.frontend.url=http://localhost:5173
+
+# ── Token de recuperación (minutos) ──────────────────────
 app.reset.token.expiration=30

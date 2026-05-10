@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axiosConfig';
 import Spinner from '../components/ui/Spinner';
@@ -8,7 +8,6 @@ import { toast } from '../utils/alerts';
 
 export default function Login() {
   const [form, setForm]       = useState({ email: '', password: '' });
-  const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const { login }             = useAuth();
@@ -69,16 +68,10 @@ export default function Login() {
                   ¿Olvidaste tu contraseña?
                 </Link>
               </div>
-              <div style={{ position: 'relative' }}>
-                <input className="input" name="password"
-                  type={show ? 'text' : 'password'}
-                  placeholder="••••••••" value={form.password}
-                  onChange={handle} required
-                  style={{ paddingRight: '2.75rem' }} />
-                <button type="button" onClick={() => setShow(!show)} style={S.eyeBtn}>
-                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+              <input className="input" name="password"
+                type="password"
+                placeholder="••••••••" value={form.password}
+                onChange={handle} required />
             </div>
 
             <button type="submit" className="btn btn-primary btn-full btn-lg"
@@ -137,11 +130,7 @@ const S = {
     fontSize: '0.78rem', color: '#4f46e5',
     textDecoration: 'none', fontWeight: '500',
   },
-  eyeBtn: {
-    position: 'absolute', right: '0.75rem', top: '50%',
-    transform: 'translateY(-50%)', background: 'none',
-    border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0,
-  },
+
   errorBox: {
     background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
     padding: '0.75rem 1rem', borderRadius: '0.625rem',

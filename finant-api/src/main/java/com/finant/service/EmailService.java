@@ -159,7 +159,7 @@ public class EmailService {
                       <td style="background:#f9fafb;padding:14px 32px;
                                  text-align:center;border-top:1px solid #e5e7eb;">
                         <p style="margin:0;font-size:11px;color:#9ca3af;">
-                          © 2024 FinAnt · Tu gestor financiero personal
+                          © 2025 FinAnt · Tu gestor financiero personal
                         </p>
                       </td>
                     </tr>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Eye, EyeOff } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axiosConfig';
 import Spinner from '../components/ui/Spinner';
@@ -15,7 +15,6 @@ const fields = [
 
 export default function Register() {
   const [form, setForm]       = useState({ name: '', document: '', phone: '', email: '', password: '' });
-  const [show, setShow]       = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const { login }             = useAuth();
@@ -74,16 +73,10 @@ export default function Register() {
 
             <div>
               <label className="label">Contraseña</label>
-              <div style={{ position: 'relative' }}>
-                <input className="input" name="password"
-                  type={show ? 'text' : 'password'}
-                  placeholder="Mínimo 6 caracteres" value={form.password}
-                  onChange={handle} required minLength={6}
-                  style={{ paddingRight: '2.75rem' }} />
-                <button type="button" onClick={() => setShow(!show)} style={S.eyeBtn}>
-                  {show ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+              <input className="input" name="password"
+                type="password"
+                placeholder="Mínimo 6 caracteres" value={form.password}
+                onChange={handle} required minLength={6} />
             </div>
 
             <button type="submit" className="btn btn-primary btn-full btn-lg"
@@ -129,11 +122,7 @@ const S = {
   divider: { height: '1px', background: '#f1f5f9', margin: '0 0 1.25rem' },
   formTitle: { margin: '0 0 1.25rem', fontSize: '1rem', fontWeight: '600', color: '#374151' },
   form: { display: 'flex', flexDirection: 'column', gap: '0.875rem' },
-  eyeBtn: {
-    position: 'absolute', right: '0.75rem', top: '50%',
-    transform: 'translateY(-50%)', background: 'none',
-    border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 0,
-  },
+
   errorBox: {
     background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626',
     padding: '0.75rem 1rem', borderRadius: '0.625rem',

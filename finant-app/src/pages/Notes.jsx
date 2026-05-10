@@ -14,7 +14,11 @@ export default function Notes() {
   const [submitting, setSubmitting] = useState(false);
 
   const load = () => api.get('/notes').then(({ data }) => setNotes(data));
-  useEffect(() => { load().finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    load()
+      .catch(() => toast('error', 'Error al cargar las notas'))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
