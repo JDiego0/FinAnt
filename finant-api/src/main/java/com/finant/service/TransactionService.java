@@ -30,7 +30,7 @@ public class TransactionService {
         List<Long> accountIds = accountRepository.findByUserId(user.getId())
                 .stream().map(Account::getId).collect(Collectors.toList());
 
-        return transactionRepository.findByAccountIdIn(accountIds)
+        return transactionRepository.findByAccountIdInOrderByDateDescIdDesc(accountIds)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -89,8 +89,8 @@ public class TransactionService {
 
         String description = "Traslado entre cuentas";
 
-        // Egreso en la cuenta origen
-        Transaction expense = Transaction.builder()
+        // Un solo registro: traslado desde origen hacia destino
+        Transaction transfer = Transaction.builder()
                 .account(origin)
                 .type("transfer")
                 .destinationAccountId(destination.getId())
@@ -100,27 +100,15 @@ public class TransactionService {
                 .applied(true)
                 .build();
 
-        // Ingreso en la cuenta destino
-        Transaction income = Transaction.builder()
-                .account(destination)
-                .type("transfer")
-                .destinationAccountId(origin.getId())
-                .date(request.getDate())
-                .description(description)
-                .amount(request.getAmount())
-                .applied(true)
-                .build();
-
-        // Actualizar saldos
+        // Actualizar saldos de ambas cuentas
         origin.setBalance(origin.getBalance().subtract(request.getAmount()));
         destination.setBalance(destination.getBalance().add(request.getAmount()));
 
         accountRepository.save(origin);
         accountRepository.save(destination);
-        transactionRepository.save(expense);
-        transactionRepository.save(income);
+        transactionRepository.save(transfer);
 
-        return toResponse(expense);
+        return toResponse(transfer);
     }
 
     @Transactional
