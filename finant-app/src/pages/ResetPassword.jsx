@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { Lock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import api from '../api/axiosConfig';
 import Spinner from '../components/ui/Spinner';
 import { toast } from '../utils/alerts';
@@ -26,6 +26,8 @@ export default function ResetPassword() {
 
   const [status,  setStatus]  = useState('validating');
   const [form,    setForm]    = useState({ newPassword: '', confirmPassword: '' });
+  const [showP1,  setShowP1]  = useState(false);
+  const [showP2,  setShowP2]  = useState(false);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
 
@@ -151,36 +153,48 @@ export default function ResetPassword() {
         {/* Nueva contraseña */}
         <div>
           <label className="label">Nueva contraseña</label>
-          <input
-            className="input"
-            type="password"
-            placeholder="Mínimo 6 caracteres"
-            value={form.newPassword}
-            onChange={handleChange('newPassword')}
-            required
-            minLength={6}
-            autoFocus
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              className="input"
+              type={showP1 ? 'text' : 'password'}
+              placeholder="Mínimo 6 caracteres"
+              value={form.newPassword}
+              onChange={handleChange('newPassword')}
+              required
+              minLength={6}
+              autoFocus
+              style={{ paddingRight: '2.75rem' }}
+            />
+            <button type="button" onClick={() => setShowP1(p => !p)} style={S.eyeBtn}>
+              {showP1 ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
 
         {/* Confirmar contraseña */}
         <div>
           <label className="label">Confirmar contraseña</label>
-          <input
-            className="input"
-            type="password"
-            placeholder="Repite la contraseña"
-            value={form.confirmPassword}
-            onChange={handleChange('confirmPassword')}
-            required
-            style={{
-              borderColor: passwordsMismatch
-                ? '#ef4444'
-                : passwordsMatch
-                ? '#22c55e'
-                : undefined,
-            }}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              className="input"
+              type={showP2 ? 'text' : 'password'}
+              placeholder="Repite la contraseña"
+              value={form.confirmPassword}
+              onChange={handleChange('confirmPassword')}
+              required
+              style={{
+                paddingRight: '2.75rem',
+                borderColor: passwordsMismatch
+                  ? '#ef4444'
+                  : passwordsMatch
+                  ? '#22c55e'
+                  : undefined,
+              }}
+            />
+            <button type="button" onClick={() => setShowP2(p => !p)} style={S.eyeBtn}>
+              {showP2 ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
 
           {/* Indicador coincidencia — sin condicional que desmonte */}
           <div style={{ minHeight: '20px', marginTop: '0.35rem' }}>
@@ -260,7 +274,12 @@ const S = {
     padding: '0.75rem 1rem', borderRadius: '0.625rem',
     fontSize: '0.85rem', marginBottom: '0.5rem',
   },
-
+  eyeBtn: {
+    position: 'absolute', right: '0.75rem', top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none', border: 'none',
+    cursor: 'pointer', color: '#94a3b8', padding: 0,
+  },
   matchText: {
     margin: 0, fontSize: '0.78rem',
     display: 'flex', alignItems: 'center', gap: '0.3rem',
