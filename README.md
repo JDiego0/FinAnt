@@ -21,7 +21,7 @@
 
 ## 📋 Descripción
 
-**FinAnt** es una aplicación web full-stack para la gestión de finanzas personales. Permite a los usuarios registrarse, iniciar sesión, administrar tres tipos de cuentas financieras (Efectivo, Ahorros e Inversiones), registrar movimientos de ingresos y egresos con control de aplicación al saldo, y tomar notas personales.
+**FinAnt** es una aplicación web full-stack para la gestión de finanzas personales. Permite a los usuarios registrarse, iniciar sesión, administrar tres tipos de cuentas financieras (Efectivo, Ahorros e Inversiones), registrar movimientos de ingresos, egresos y traslados entre cuentas, editar movimientos y notas, y tomar notas personales.
 
 ### ✨ Funcionalidades principales
 
@@ -29,8 +29,9 @@
 |--------|-------------|
 | 🔐 **Autenticación** | Registro, login con JWT, recuperación de contraseña por email |
 | 💰 **Cuentas** | 3 cuentas automáticas por usuario (Efectivo, Ahorros, Inversiones) con ajuste de saldo |
-| 📊 **Movimientos** | Registro de ingresos/egresos, toggle de aplicación al saldo, eliminación |
-| 📝 **Notas** | Creación y eliminación de notas personales con tarjetas de colores |
+| 📊 **Movimientos** | Registro de ingresos, egresos y **traslados entre cuentas**; edición, toggle de aplicación al saldo y eliminación; lista ordenada por fecha descendente |
+| 🔄 **Traslados** | Transferencia de dinero entre cuentas propias con actualización atómica de saldos en origen y destino |
+| 📝 **Notas** | Creación, **edición** y eliminación de notas personales con tarjetas de colores |
 | 📧 **Emails** | Correo de bienvenida y recuperación de contraseña vía Brevo HTTP API |
 | 🌐 **Despliegue** | Backend en Render, frontend en Netlify, BD en Supabase |
 
@@ -276,10 +277,13 @@ La aplicación se abrirá en `http://localhost:5173`
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| `GET` | `/api/transactions` | Listar movimientos del usuario |
-| `POST` | `/api/transactions` | Crear un movimiento |
+| `GET` | `/api/transactions` | Listar movimientos del usuario (ordenados por fecha desc) |
+| `POST` | `/api/transactions` | Crear un movimiento (ingreso, egreso o traslado) |
+| `PUT` | `/api/transactions/{id}` | Editar un movimiento existente |
 | `PATCH` | `/api/transactions/{id}/toggle` | Alternar estado aplicado/pendiente |
 | `DELETE` | `/api/transactions/{id}` | Eliminar un movimiento |
+
+> **Nota sobre traslados:** Al crear un movimiento con `type: "transfer"`, se debe incluir `destinationAccountId`. El backend actualiza atómicamente los saldos de ambas cuentas y registra un único movimiento.
 
 ### Notas (requieren JWT)
 
@@ -287,6 +291,7 @@ La aplicación se abrirá en `http://localhost:5173`
 |--------|------|-------------|
 | `GET` | `/api/notes` | Listar notas del usuario |
 | `POST` | `/api/notes` | Crear una nota |
+| `PUT` | `/api/notes/{id}` | Editar una nota existente |
 | `DELETE` | `/api/notes/{id}` | Eliminar una nota |
 
 ---
@@ -341,20 +346,20 @@ Render suspende los servicios del free tier tras 15 minutos de inactividad. Para
 ## 🗄️ Modelo de Datos
 
 ```
-┌──────────────┐       ┌──────────────────┐       ┌──────────────────────┐
-│    users     │       │    accounts      │       │    transactions      │
-├──────────────┤       ├──────────────────┤       ├──────────────────────┤
-│ id (PK)      │──┐    │ id (PK)          │──┐    │ id (PK)              │
-│ name         │  │    │ user_id (FK)     │  │    │ account_id (FK)      │
-│ document     │  ├───►│ type             │  ├───►│ type (income/expense)│
-│ phone        │  │    │ balance          │  │    │ date                 │
-│ email        │  │    │ updated_at       │  │    │ description          │
-│ password_hash│  │    └──────────────────┘  │    │ amount               │
-│ created_at   │  │                          │    │ applied              │
-└──────────────┘  │    ┌──────────────────┐  │    │ created_at           │
-                  │    │     notes        │  │    └──────────────────────┘
-                  │    ├──────────────────┤  │
-                  ├───►│ id (PK)          │  │
+┌──────────────┐       ┌──────────────────┐       ┌───────────────────────────┐
+│    users     │       │    accounts      │       │       transactions        │
+├──────────────┤       ├──────────────────┤       ├───────────────────────────┤
+│ id (PK)      │──┐    │ id (PK)          │──┐    │ id (PK)                   │
+│ name         │  │    │ user_id (FK)     │  │    │ account_id (FK)           │
+│ document     │  ├───►│ type             │  ├───►│ type (income/expense/     │
+│ phone        │  │    │ balance          │  │    │       transfer)           │
+│ email        │  │    │ updated_at       │  │    │ destination_account_id    │
+│ password_hash│  │    └──────────────────┘  │    │ date                      │
+│ created_at   │  │                          │    │ description               │
+└──────────────┘  │    ┌──────────────────┐  │    │ amount                    │
+                  │    │     notes        │  │    │ applied                   │
+                  │    ├──────────────────┤  │    │ created_at                │
+                  ├───►│ id (PK)          │  │    └───────────────────────────┘
                   │    │ user_id (FK)     │  │
                   │    │ title            │  │
                   │    │ content          │  │
