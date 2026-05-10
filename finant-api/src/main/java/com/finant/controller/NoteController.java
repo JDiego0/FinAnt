@@ -36,6 +36,16 @@ public class NoteController {
         );
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<NoteResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody NoteRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                noteService.updateNote(id, request, userDetails.getUsername())
+        );
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable Long id,

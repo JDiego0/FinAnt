@@ -36,6 +36,16 @@ public class TransactionController {
         );
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<TransactionResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody TransactionRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                transactionService.updateTransaction(id, request, userDetails.getUsername())
+        );
+    }
+
     @PatchMapping("/{id}/toggle")
     public ResponseEntity<TransactionResponse> toggle(
             @PathVariable Long id,

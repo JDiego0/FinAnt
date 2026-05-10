@@ -112,6 +112,64 @@ public class TransactionService {
     }
 
     @Transactional
+    public TransactionResponse updateTransaction(Long transactionId, TransactionRequest request, String email) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new RuntimeException("Movimiento no encontrado"));
+
+        Account account = transaction.getAccount();
+        if (!account.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("No autorizado");
+        }
+
+        if ("transfer".equals(transaction.getType())) {
+            return updateTransfer(transaction, request, account);
+        }
+
+        // Revertir saldo anterior si estaba aplicado
+        if (Boolean.TRUE.equals(transaction.getApplied())) {
+            revertFromBalance(account, transaction);
+        }
+
+        // Actualizar campos
+        transaction.setType(request.getType());
+        transaction.setDate(request.getDate());
+        transaction.setDescription(request.getDescription());
+        transaction.setAmount(request.getAmount());
+        transaction.setApplied(request.getApplied());
+
+        // Aplicar nuevo saldo si corresponde
+        if (Boolean.TRUE.equals(request.getApplied())) {
+            applyToBalance(account, transaction);
+        }
+
+        accountRepository.save(account);
+        transactionRepository.save(transaction);
+        return toResponse(transaction);
+    }
+
+    private TransactionResponse updateTransfer(Transaction transaction, TransactionRequest request, Account origin) {
+        // Revertir saldo original de ambas cuentas
+        Account destination = accountRepository.findById(transaction.getDestinationAccountId())
+                .orElseThrow(() -> new RuntimeException("Cuenta destino no encontrada"));
+
+        origin.setBalance(origin.getBalance().add(transaction.getAmount()));
+        destination.setBalance(destination.getBalance().subtract(transaction.getAmount()));
+
+        // Actualizar campos editables del traslado
+        transaction.setDate(request.getDate());
+        transaction.setAmount(request.getAmount());
+
+        // Aplicar nuevos saldos
+        origin.setBalance(origin.getBalance().subtract(request.getAmount()));
+        destination.setBalance(destination.getBalance().add(request.getAmount()));
+
+        accountRepository.save(origin);
+        accountRepository.save(destination);
+        transactionRepository.save(transaction);
+        return toResponse(transaction);
+    }
+
+    @Transactional
     public TransactionResponse toggleApplied(Long transactionId, String email) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new RuntimeException("Movimiento no encontrado"));

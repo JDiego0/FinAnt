@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, StickyNote, X } from 'lucide-react';
+import { Plus, Trash2, StickyNote, X, Pencil } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import EmptyState from '../components/ui/EmptyState';
 import Spinner from '../components/ui/Spinner';
@@ -10,6 +10,7 @@ export default function Notes() {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ title: '', content: '' });
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,17 +21,28 @@ export default function Notes() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleCreate = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/notes', form);
+      if (editingId) {
+        await api.put(`/notes/${editingId}`, form);
+      } else {
+        await api.post('/notes', form);
+      }
       await load();
       setForm({ title: '', content: '' });
+      setEditingId(null);
       setShowForm(false);
-      toast('success', 'Nota creada');
-    } catch { toast('error', 'Error al crear nota'); }
+      toast('success', editingId ? 'Nota actualizada' : 'Nota creada');
+    } catch { toast('error', editingId ? 'Error al actualizar' : 'Error al crear nota'); }
     finally { setSubmitting(false); }
+  };
+
+  const handleEdit = (note) => {
+    setForm({ title: note.title, content: note.content || '' });
+    setEditingId(note.id);
+    setShowForm(true);
   };
 
   const handleDelete = async (id) => {
@@ -63,14 +75,14 @@ export default function Notes() {
         </div>
 
         {showForm && (
-          <div style={overlay} onClick={() => setShowForm(false)}>
+          <div style={overlay} onClick={() => { setShowForm(false); setEditingId(null); setForm({ title: '', content: '' }); }}>
             <div className="card" style={{ width: '100%', maxWidth: '460px', padding: '1.75rem', animation: 'slideUp 0.3s ease' }}
               onClick={e => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ margin: 0, fontWeight: '600' }}>Nueva nota</h3>
-                <button onClick={() => setShowForm(false)} className="btn btn-ghost btn-sm"><X size={18} /></button>
+                <h3 style={{ margin: 0, fontWeight: '600' }}>{editingId ? 'Editar nota' : 'Nueva nota'}</h3>
+                <button onClick={() => { setShowForm(false); setEditingId(null); setForm({ title: '', content: '' }); }} className="btn btn-ghost btn-sm"><X size={18} /></button>
               </div>
-              <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                 <div>
                   <label className="label">Título</label>
                   <input className="input" placeholder="Título de la nota" value={form.title}
@@ -83,11 +95,11 @@ export default function Notes() {
                     rows={4} style={{ resize: 'vertical' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+                  <button type="button" onClick={() => { setShowForm(false); setEditingId(null); setForm({ title: '', content: '' }); }} className="btn btn-secondary" style={{ flex: 1 }}>
                     Cancelar
                   </button>
                   <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={submitting}>
-                    {submitting ? <><Spinner size={16} color="white" /> Guardando...</> : 'Crear nota'}
+                    {submitting ? <><Spinner size={16} color="white" /> Guardando...</> : editingId ? 'Guardar cambios' : 'Crear nota'}
                   </button>
                 </div>
               </form>
@@ -122,11 +134,18 @@ export default function Notes() {
                     <StickyNote size={14} color="#475569" />
                     <p style={{ margin: 0, fontWeight: '600', fontSize: '0.9rem', color: '#1e293b' }}>{note.title}</p>
                   </div>
-                  <button onClick={() => handleDelete(note.id)}
-                    className="btn btn-ghost btn-sm"
-                    style={{ padding: '0.2rem', color: '#94a3b8', opacity: 0.7 }}>
-                    <Trash2 size={13} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <button onClick={() => handleEdit(note)}
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '0.2rem', color: '#4f46e5', opacity: 0.7 }}>
+                      <Pencil size={13} />
+                    </button>
+                    <button onClick={() => handleDelete(note.id)}
+                      className="btn btn-ghost btn-sm"
+                      style={{ padding: '0.2rem', color: '#94a3b8', opacity: 0.7 }}>
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
                   {note.content || <span style={{ opacity: 0.5 }}>Sin contenido</span>}

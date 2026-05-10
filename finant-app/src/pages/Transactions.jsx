@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Check, TrendingUp, TrendingDown, ArrowLeftRight, X } from 'lucide-react';
+import { Plus, Trash2, Check, TrendingUp, TrendingDown, ArrowLeftRight, X, Pencil } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import EmptyState from '../components/ui/EmptyState';
 import Spinner from '../components/ui/Spinner';
@@ -12,6 +12,7 @@ export default function Transactions() {
   const [accounts, setAccounts]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [showForm, setShowForm]         = useState(false);
+  const [editingId, setEditingId]       = useState(null);
   const [submitting, setSubmitting]     = useState(false);
   const [toggling, setToggling]         = useState(null);
   const [form, setForm] = useState({
@@ -53,7 +54,7 @@ export default function Transactions() {
     destinationAccountId: '',
   });
 
-  // ── Crear movimiento ─────────────────────────────────────────────
+  // ── Crear / Editar movimiento ──────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -68,16 +69,36 @@ export default function Transactions() {
         payload.applied = true;
         payload.description = 'Traslado entre cuentas';
       }
-      await api.post('/transactions', payload);
+      if (editingId) {
+        await api.put(`/transactions/${editingId}`, payload);
+      } else {
+        await api.post('/transactions', payload);
+      }
       await reload();
       setShowForm(false);
+      setEditingId(null);
       resetForm();
-      toast('success', 'Movimiento registrado');
+      toast('success', editingId ? 'Movimiento actualizado' : 'Movimiento registrado');
     } catch {
-      toast('error', 'Error al registrar movimiento');
+      toast('error', editingId ? 'Error al actualizar' : 'Error al registrar movimiento');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // ── Abrir edición ────────────────────────────────────────────────────
+  const handleEdit = (t) => {
+    setForm({
+      accountId:            String(t.accountId),
+      type:                 t.type,
+      date:                 t.date,
+      description:          t.description || '',
+      amount:               String(t.amount),
+      applied:              t.applied,
+      destinationAccountId: t.destinationAccountId ? String(t.destinationAccountId) : '',
+    });
+    setEditingId(t.id);
+    setShowForm(true);
   };
 
   // ── Toggle aplicado (optimista) ──────────────────────────────────
@@ -144,7 +165,7 @@ export default function Transactions() {
 
         {/* ── Modal: nuevo movimiento ─────────────────────────────── */}
         {showForm && (
-          <div style={S.overlay} onClick={() => { setShowForm(false); resetForm(); }}>
+          <div style={S.overlay} onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }}>
             <div
               className="card"
               style={S.modal}
@@ -152,10 +173,10 @@ export default function Transactions() {
             >
               <div style={S.modalHeader}>
                 <h3 style={{ margin: 0, fontWeight: '600', color: '#0f172a' }}>
-                  Nuevo movimiento
+                  {editingId ? 'Editar movimiento' : 'Nuevo movimiento'}
                 </h3>
                 <button
-                  onClick={() => { setShowForm(false); resetForm(); }}
+                  onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }}
                   className="btn btn-ghost btn-sm"
                   style={{ padding: '0.25rem' }}
                 >
@@ -176,6 +197,8 @@ export default function Transactions() {
                       value={form.accountId}
                       onChange={e => setForm({ ...form, accountId: e.target.value })}
                       required
+                      disabled={!!editingId}
+                      style={editingId ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                     >
                       <option value="">Seleccionar</option>
                       {accounts.map(a => (
@@ -198,6 +221,8 @@ export default function Transactions() {
                           applied: newType === 'transfer' ? true : prev.applied,
                         }));
                       }}
+                      disabled={!!editingId}
+                      style={editingId ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                     >
                       <option value="income">💚 Ingreso</option>
                       <option value="expense">🔴 Egreso</option>
@@ -282,7 +307,7 @@ export default function Transactions() {
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
                   <button
                     type="button"
-                    onClick={() => { setShowForm(false); resetForm(); }}
+                    onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }}
                     className="btn btn-secondary"
                     style={{ flex: 1 }}
                   >
@@ -296,7 +321,7 @@ export default function Transactions() {
                   >
                     {submitting
                       ? <><Spinner size={16} color="white" />Guardando...</>
-                      : 'Registrar movimiento'
+                      : editingId ? 'Guardar cambios' : 'Registrar movimiento'
                     }
                   </button>
                 </div>
@@ -421,6 +446,23 @@ export default function Transactions() {
                         <span>{t.applied ? 'Hecho' : 'Pendiente'}</span>
                       </button>
                     )}
+
+                    {/* Editar */}
+                    <button
+                      onClick={() => handleEdit(t)}
+                      disabled={isBusy}
+                      className="btn btn-sm"
+                      title="Editar"
+                      style={{
+                        background: '#eef2ff',
+                        color: '#4f46e5',
+                        padding: '0.3rem 0.625rem', fontSize: '0.75rem',
+                        display: 'flex', alignItems: 'center', gap: '0.3rem',
+                      }}
+                    >
+                      <Pencil size={13} />
+                      <span>Editar</span>
+                    </button>
 
                     {/* Eliminar */}
                     <button

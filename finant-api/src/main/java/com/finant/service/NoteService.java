@@ -44,6 +44,21 @@ public class NoteService {
     }
 
     @Transactional
+    public NoteResponse updateNote(Long noteId, NoteRequest request, String email) {
+        Note note = noteRepository.findById(noteId)
+                .orElseThrow(() -> new RuntimeException("Nota no encontrada"));
+
+        if (!note.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("No autorizado");
+        }
+
+        note.setTitle(request.getTitle());
+        note.setContent(request.getContent());
+        noteRepository.save(note);
+        return toResponse(note);
+    }
+
+    @Transactional
     public void deleteNote(Long noteId, String email) {
         Note note = noteRepository.findById(noteId)
                 .orElseThrow(() -> new RuntimeException("Nota no encontrada"));
