@@ -44,6 +44,11 @@ public class TransactionService {
             throw new RuntimeException("No autorizado");
         }
 
+        // ── Traslado entre cuentas ──
+        if ("transfer".equals(request.getType())) {
+            return createTransfer(request, account, email);
+        }
+
         Transaction transaction = Transaction.builder()
                 .account(account)
                 .type(request.getType())
@@ -63,10 +68,70 @@ public class TransactionService {
         return toResponse(transaction);
     }
 
+    /**
+     * Crea un traslado atómico: egreso en cuenta origen e ingreso en cuenta destino.
+     */
+    private TransactionResponse createTransfer(TransactionRequest request, Account origin, String email) {
+        if (request.getDestinationAccountId() == null) {
+            throw new RuntimeException("La cuenta destino es obligatoria para traslados");
+        }
+        if (request.getDestinationAccountId().equals(request.getAccountId())) {
+            throw new RuntimeException("La cuenta destino debe ser diferente a la cuenta origen");
+        }
+
+        Account destination = accountRepository.findById(request.getDestinationAccountId())
+                .orElseThrow(() -> new RuntimeException("Cuenta destino no encontrada"));
+
+        // Verificar que la cuenta destino pertenece al mismo usuario
+        if (!destination.getUser().getEmail().equals(email)) {
+            throw new RuntimeException("No autorizado: la cuenta destino no pertenece al usuario");
+        }
+
+        String description = "Traslado entre cuentas";
+
+        // Egreso en la cuenta origen
+        Transaction expense = Transaction.builder()
+                .account(origin)
+                .type("transfer")
+                .destinationAccountId(destination.getId())
+                .date(request.getDate())
+                .description(description)
+                .amount(request.getAmount())
+                .applied(true)
+                .build();
+
+        // Ingreso en la cuenta destino
+        Transaction income = Transaction.builder()
+                .account(destination)
+                .type("transfer")
+                .destinationAccountId(origin.getId())
+                .date(request.getDate())
+                .description(description)
+                .amount(request.getAmount())
+                .applied(true)
+                .build();
+
+        // Actualizar saldos
+        origin.setBalance(origin.getBalance().subtract(request.getAmount()));
+        destination.setBalance(destination.getBalance().add(request.getAmount()));
+
+        accountRepository.save(origin);
+        accountRepository.save(destination);
+        transactionRepository.save(expense);
+        transactionRepository.save(income);
+
+        return toResponse(expense);
+    }
+
     @Transactional
     public TransactionResponse toggleApplied(Long transactionId, String email) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new RuntimeException("Movimiento no encontrado"));
+
+        // No permitir toggle en traslados
+        if ("transfer".equals(transaction.getType())) {
+            throw new RuntimeException("Los traslados no pueden cambiar de estado");
+        }
 
         Account account = transaction.getAccount();
 
@@ -129,6 +194,7 @@ public class TransactionService {
         response.setDescription(t.getDescription());
         response.setAmount(t.getAmount());
         response.setApplied(t.getApplied());
+        response.setDestinationAccountId(t.getDestinationAccountId());
         return response;
     }
 }

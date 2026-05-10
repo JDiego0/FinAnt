@@ -12,7 +12,9 @@ public class TransactionRequest {
     private Long accountId;
 
     @NotBlank
-    private String type; // "income" | "expense"
+    private String type; // "income" | "expense" | "transfer"
+
+    private Long destinationAccountId;
 
     @NotNull
     private LocalDate date;

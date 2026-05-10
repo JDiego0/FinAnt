@@ -22,7 +22,10 @@ public class Transaction {
     private Account account;
 
     @Column(nullable = false, length = 50)
-    private String type;          // "income" | "expense"
+    private String type;          // "income" | "expense" | "transfer"
+
+    @Column(name = "destination_account_id")
+    private Long destinationAccountId;
 
     @Column(nullable = false)
     private LocalDate date;

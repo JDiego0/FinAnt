@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2, Check, TrendingUp, TrendingDown, X } from 'lucide-react';
+import { Plus, Trash2, Check, TrendingUp, TrendingDown, ArrowLeftRight, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import EmptyState from '../components/ui/EmptyState';
 import Spinner from '../components/ui/Spinner';
@@ -21,6 +21,7 @@ export default function Transactions() {
     description: '',
     amount:      '',
     applied:     false,
+    destinationAccountId: '',
   });
 
   // ── Carga inicial ────────────────────────────────────────────────
@@ -49,6 +50,7 @@ export default function Transactions() {
     description: '',
     amount:      '',
     applied:     false,
+    destinationAccountId: '',
   });
 
   // ── Crear movimiento ─────────────────────────────────────────────
@@ -56,11 +58,17 @@ export default function Transactions() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/transactions', {
+      const payload = {
         ...form,
         accountId: Number(form.accountId),
         amount:    Number(form.amount),
-      });
+      };
+      if (form.type === 'transfer') {
+        payload.destinationAccountId = Number(form.destinationAccountId);
+        payload.applied = true;
+        payload.description = 'Traslado entre cuentas';
+      }
+      await api.post('/transactions', payload);
       await reload();
       setShowForm(false);
       resetForm();
@@ -180,10 +188,20 @@ export default function Transactions() {
                     <select
                       className="input"
                       value={form.type}
-                      onChange={e => setForm({ ...form, type: e.target.value })}
+                      onChange={e => {
+                        const newType = e.target.value;
+                        setForm(prev => ({
+                          ...prev,
+                          type: newType,
+                          description: newType === 'transfer' ? 'Traslado entre cuentas' : (prev.type === 'transfer' ? '' : prev.description),
+                          destinationAccountId: newType === 'transfer' ? prev.destinationAccountId : '',
+                          applied: newType === 'transfer' ? true : prev.applied,
+                        }));
+                      }}
                     >
                       <option value="income">💚 Ingreso</option>
                       <option value="expense">🔴 Egreso</option>
+                      <option value="transfer">🔄 Traslado</option>
                     </select>
                   </div>
                 </div>
@@ -214,27 +232,51 @@ export default function Transactions() {
                   </div>
                 </div>
 
+                {/* Cuenta destino (solo traslado) */}
+                {form.type === 'transfer' && (
+                  <div>
+                    <label className="label">Cuenta destino</label>
+                    <select
+                      className="input"
+                      value={form.destinationAccountId}
+                      onChange={e => setForm({ ...form, destinationAccountId: e.target.value })}
+                      required
+                    >
+                      <option value="">Seleccionar destino</option>
+                      {accounts
+                        .filter(a => String(a.id) !== String(form.accountId))
+                        .map(a => (
+                          <option key={a.id} value={a.id}>{a.type}</option>
+                        ))}
+                    </select>
+                  </div>
+                )}
+
                 {/* Descripción */}
                 <div>
                   <label className="label">Descripción</label>
                   <input
                     className="input"
                     placeholder="Ej: Pago de nómina"
-                    value={form.description}
+                    value={form.type === 'transfer' ? 'Traslado entre cuentas' : form.description}
                     onChange={e => setForm({ ...form, description: e.target.value })}
+                    disabled={form.type === 'transfer'}
+                    style={form.type === 'transfer' ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
                   />
                 </div>
 
-                {/* Checkbox aplicar */}
-                <label style={S.checkLabel}>
-                  <input
-                    type="checkbox"
-                    checked={form.applied}
-                    onChange={e => setForm({ ...form, applied: e.target.checked })}
-                    style={{ width: '16px', height: '16px', accentColor: '#4f46e5', cursor: 'pointer' }}
-                  />
-                  Aplicar al saldo inmediatamente
-                </label>
+                {/* Checkbox aplicar (oculto en traslados) */}
+                {form.type !== 'transfer' && (
+                  <label style={S.checkLabel}>
+                    <input
+                      type="checkbox"
+                      checked={form.applied}
+                      onChange={e => setForm({ ...form, applied: e.target.checked })}
+                      style={{ width: '16px', height: '16px', accentColor: '#4f46e5', cursor: 'pointer' }}
+                    />
+                    Aplicar al saldo inmediatamente
+                  </label>
+                )}
 
                 {/* Acciones */}
                 <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
@@ -279,9 +321,11 @@ export default function Transactions() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
             {transactions.map((t, i) => {
-              const acc      = getAccount(t.accountId);
-              const isIncome = t.type === 'income';
-              const isBusy   = toggling === t.id;
+              const acc        = getAccount(t.accountId);
+              const isIncome   = t.type === 'income';
+              const isTransfer = t.type === 'transfer';
+              const isBusy     = toggling === t.id;
+              const borderColor = isTransfer ? '#7c3aed' : isIncome ? '#22c55e' : '#ef4444';
 
               return (
                 <div
@@ -291,7 +335,7 @@ export default function Transactions() {
                     padding: '0.875rem 1rem',
                     animation: `slideUp ${0.1 + i * 0.03}s ease`,
                     opacity: t.applied ? 1 : 0.65,
-                    borderLeft: `3px solid ${isIncome ? '#22c55e' : '#ef4444'}`,
+                    borderLeft: `3px solid ${borderColor}`,
                     transition: 'box-shadow 0.2s, opacity 0.3s',
                   }}
                 >
@@ -302,10 +346,12 @@ export default function Transactions() {
                     <div style={{
                       width: '36px', height: '36px', borderRadius: '0.5rem',
                       flexShrink: 0,
-                      background: isIncome ? '#dcfce7' : '#fef2f2',
+                      background: isTransfer ? '#f3e8ff' : isIncome ? '#dcfce7' : '#fef2f2',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      {isIncome
+                      {isTransfer
+                        ? <ArrowLeftRight size={15} color="#7c3aed" />
+                        : isIncome
                         ? <TrendingUp   size={15} color="#16a34a" />
                         : <TrendingDown size={15} color="#dc2626" />
                       }
@@ -324,7 +370,7 @@ export default function Transactions() {
                         margin: '0.15rem 0 0', fontSize: '0.72rem', color: '#94a3b8',
                         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
-                        {acc?.type ?? '—'} · {t.date}
+                        {acc?.type ?? '—'}{isTransfer && t.destinationAccountId ? ` → ${getAccount(t.destinationAccountId)?.type ?? '—'}` : ''} · {t.date}
                         {!t.applied && (
                           <span style={{
                             marginLeft: '0.4rem', color: '#f59e0b', fontWeight: '600',
@@ -339,10 +385,10 @@ export default function Transactions() {
                     <div style={{ flexShrink: 0, textAlign: 'right' }}>
                       <p style={{
                         margin: 0, fontWeight: '700', fontSize: '0.875rem',
-                        color: isIncome ? '#16a34a' : '#dc2626',
+                        color: isTransfer ? '#7c3aed' : isIncome ? '#16a34a' : '#dc2626',
                         whiteSpace: 'nowrap',
                       }}>
-                        {isIncome ? '+' : '−'}{formatCOP(t.amount)}
+                        {isTransfer ? '⇄ ' : isIncome ? '+' : '−'}{formatCOP(t.amount)}
                       </p>
                     </div>
                   </div>
@@ -353,26 +399,28 @@ export default function Transactions() {
                     gap: '0.375rem', marginTop: '0.625rem',
                   }}>
 
-                    {/* Toggle */}
-                    <button
-                      onClick={() => handleToggle(t.id)}
-                      disabled={isBusy}
-                      className="btn btn-sm"
-                      title={t.applied ? 'Desmarcar' : 'Marcar como hecho'}
-                      style={{
-                        background: t.applied ? '#dcfce7' : '#f1f5f9',
-                        color:      t.applied ? '#16a34a' : '#94a3b8',
-                        padding: '0.3rem 0.625rem', fontSize: '0.75rem',
-                        gap: '0.3rem', display: 'flex', alignItems: 'center',
-                        transition: 'background 0.2s, color 0.2s',
-                      }}
-                    >
-                      {isBusy
-                        ? <Spinner size={12} color={t.applied ? '#16a34a' : '#94a3b8'} />
-                        : <Check size={13} />
-                      }
-                      <span>{t.applied ? 'Hecho' : 'Pendiente'}</span>
-                    </button>
+                    {/* Toggle (oculto en traslados) */}
+                    {!isTransfer && (
+                      <button
+                        onClick={() => handleToggle(t.id)}
+                        disabled={isBusy}
+                        className="btn btn-sm"
+                        title={t.applied ? 'Desmarcar' : 'Marcar como hecho'}
+                        style={{
+                          background: t.applied ? '#dcfce7' : '#f1f5f9',
+                          color:      t.applied ? '#16a34a' : '#94a3b8',
+                          padding: '0.3rem 0.625rem', fontSize: '0.75rem',
+                          gap: '0.3rem', display: 'flex', alignItems: 'center',
+                          transition: 'background 0.2s, color 0.2s',
+                        }}
+                      >
+                        {isBusy
+                          ? <Spinner size={12} color={t.applied ? '#16a34a' : '#94a3b8'} />
+                          : <Check size={13} />
+                        }
+                        <span>{t.applied ? 'Hecho' : 'Pendiente'}</span>
+                      </button>
+                    )}
 
                     {/* Eliminar */}
                     <button

@@ -13,4 +13,5 @@ public class TransactionResponse {
     private String description;
     private BigDecimal amount;
     private Boolean applied;
+    private Long destinationAccountId;
 }
