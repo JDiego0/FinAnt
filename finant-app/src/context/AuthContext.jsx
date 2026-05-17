@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 const AuthContext = createContext(null);
 
-/** Claves centralizadas para localStorage */
+/** Claves centralizadas para sessionStorage (la sesión se limpia al cerrar la ventana) */
 export const STORAGE_KEYS = {
   TOKEN: 'token',
   NAME:  'name',
@@ -14,10 +14,10 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Al cargar la app, verificar si hay sesión guardada
-    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
-    const name  = localStorage.getItem(STORAGE_KEYS.NAME);
-    const email = localStorage.getItem(STORAGE_KEYS.EMAIL);
+    // Al cargar la app, verificar si hay sesión activa en la ventana
+    const token = sessionStorage.getItem(STORAGE_KEYS.TOKEN);
+    const name  = sessionStorage.getItem(STORAGE_KEYS.NAME);
+    const email = sessionStorage.getItem(STORAGE_KEYS.EMAIL);
 
     if (token && name && email) {
       setUser({ token, name, email });
@@ -26,14 +26,14 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = (data) => {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, data.token);
-    localStorage.setItem(STORAGE_KEYS.NAME,  data.name);
-    localStorage.setItem(STORAGE_KEYS.EMAIL, data.email);
+    sessionStorage.setItem(STORAGE_KEYS.TOKEN, data.token);
+    sessionStorage.setItem(STORAGE_KEYS.NAME,  data.name);
+    sessionStorage.setItem(STORAGE_KEYS.EMAIL, data.email);
     setUser(data);
   };
 
   const logout = () => {
-    Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+    Object.values(STORAGE_KEYS).forEach((key) => sessionStorage.removeItem(key));
     setUser(null);
   };
 
