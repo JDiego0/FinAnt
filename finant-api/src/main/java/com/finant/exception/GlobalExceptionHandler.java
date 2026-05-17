@@ -35,6 +35,18 @@ public class GlobalExceptionHandler {
                 .body(Map.of("error", "Acceso denegado"));
     }
 
+    // Saldo insuficiente (regla de negocio financiera)
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientBalance(InsufficientBalanceException ex) {
+        log.warn("Saldo insuficiente: {}", ex.getMessage());
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+        body.put("accountType", ex.getAccountType());
+        body.put("currentBalance", ex.getCurrentBalance());
+        body.put("requiredAmount", ex.getRequiredAmount());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
     // Errores de negocio (RuntimeException)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {

@@ -5,6 +5,7 @@ import com.finant.dto.response.TransactionResponse;
 import com.finant.entity.Account;
 import com.finant.entity.Transaction;
 import com.finant.entity.User;
+import com.finant.exception.InsufficientBalanceException;
 import com.finant.repository.AccountRepository;
 import com.finant.repository.TransactionRepository;
 import com.finant.repository.UserRepository;
@@ -60,6 +61,10 @@ public class TransactionService {
 
         // Si se crea ya aplicada, afecta el saldo inmediatamente
         if (Boolean.TRUE.equals(request.getApplied())) {
+            // Validar saldo suficiente para egresos
+            if ("expense".equals(request.getType())) {
+                validateSufficientBalance(account, request.getAmount());
+            }
             applyToBalance(account, transaction);
             accountRepository.save(account);
         }
@@ -100,6 +105,9 @@ public class TransactionService {
                 .applied(true)
                 .build();
 
+        // Validar saldo suficiente en la cuenta origen
+        validateSufficientBalance(origin, request.getAmount());
+
         // Actualizar saldos de ambas cuentas
         origin.setBalance(origin.getBalance().subtract(request.getAmount()));
         destination.setBalance(destination.getBalance().add(request.getAmount()));
@@ -139,6 +147,10 @@ public class TransactionService {
 
         // Aplicar nuevo saldo si corresponde
         if (Boolean.TRUE.equals(request.getApplied())) {
+            // Validar saldo suficiente para egresos
+            if ("expense".equals(request.getType())) {
+                validateSufficientBalance(account, request.getAmount());
+            }
             applyToBalance(account, transaction);
         }
 
@@ -158,6 +170,9 @@ public class TransactionService {
         // Actualizar campos editables del traslado
         transaction.setDate(request.getDate());
         transaction.setAmount(request.getAmount());
+
+        // Validar saldo suficiente en la cuenta origen para el nuevo monto
+        validateSufficientBalance(origin, request.getAmount());
 
         // Aplicar nuevos saldos
         origin.setBalance(origin.getBalance().subtract(request.getAmount()));
@@ -191,6 +206,10 @@ public class TransactionService {
         if (wasApplied) {
             revertFromBalance(account, transaction);
         } else {
+            // Validar saldo suficiente al aplicar un egreso pendiente
+            if ("expense".equals(transaction.getType())) {
+                validateSufficientBalance(account, transaction.getAmount());
+            }
             applyToBalance(account, transaction);
         }
 
@@ -214,6 +233,16 @@ public class TransactionService {
     }
 
     // --- Métodos privados de lógica financiera ---
+
+    private void validateSufficientBalance(Account account, java.math.BigDecimal amount) {
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientBalanceException(
+                    account.getType(),
+                    account.getBalance(),
+                    amount
+            );
+        }
+    }
 
     private void applyToBalance(Account account, Transaction transaction) {
         if ("income".equals(transaction.getType())) {

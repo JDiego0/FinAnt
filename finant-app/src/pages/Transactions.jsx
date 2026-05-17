@@ -5,7 +5,7 @@ import EmptyState from '../components/ui/EmptyState';
 import Spinner from '../components/ui/Spinner';
 import api from '../api/axiosConfig';
 import { formatCOP } from '../utils/formatCurrency';
-import { toast, confirm } from '../utils/alerts';
+import { toast, confirm, alert } from '../utils/alerts';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -79,8 +79,18 @@ export default function Transactions() {
       setEditingId(null);
       resetForm();
       toast('success', editingId ? 'Movimiento actualizado' : 'Movimiento registrado');
-    } catch {
-      toast('error', editingId ? 'Error al actualizar' : 'Error al registrar movimiento');
+    } catch (err) {
+      const res = err.response;
+      if (res?.status === 409 && res.data?.accountType) {
+        const d = res.data;
+        alert(
+          'warning',
+          'Saldo insuficiente',
+          `La cuenta "${d.accountType}" no tiene saldo suficiente.\n\nSaldo actual: ${formatCOP(d.currentBalance)}\nMonto requerido: ${formatCOP(d.requiredAmount)}`
+        );
+      } else {
+        toast('error', editingId ? 'Error al actualizar' : 'Error al registrar movimiento');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -111,11 +121,21 @@ export default function Transactions() {
       await api.patch(`/transactions/${id}/toggle`);
       api.get('/accounts').then(({ data }) => setAccounts(data));
       toast('success', 'Estado actualizado');
-    } catch {
+    } catch (err) {
       setTransactions(prev =>
         prev.map(t => t.id === id ? { ...t, applied: !t.applied } : t)
       );
-      toast('error', 'Error al actualizar');
+      const res = err.response;
+      if (res?.status === 409 && res.data?.accountType) {
+        const d = res.data;
+        alert(
+          'warning',
+          'Saldo insuficiente',
+          `La cuenta "${d.accountType}" no tiene saldo suficiente para aplicar este movimiento.\n\nSaldo actual: ${formatCOP(d.currentBalance)}\nMonto requerido: ${formatCOP(d.requiredAmount)}`
+        );
+      } else {
+        toast('error', 'Error al actualizar');
+      }
     } finally {
       setToggling(null);
     }
